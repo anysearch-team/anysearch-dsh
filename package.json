@@ -1,0 +1,79 @@
+{
+  "name": "anysearch-dsh",
+  "version": "0.1.0",
+  "description": "AnySearch web search provider and advanced tools for DeepSeek Harness",
+  "keywords": [
+    "anysearch",
+    "deepseek-harness",
+    "dsh-plugin",
+    "web-search"
+  ],
+  "homepage": "https://github.com/anysearch-team/anysearch-dsh#readme",
+  "bugs": {
+    "url": "https://github.com/anysearch-team/anysearch-dsh/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anysearch-team/anysearch-dsh.git"
+  },
+  "license": "MIT",
+  "author": "AnySearch Team",
+  "type": "module",
+  "sideEffects": false,
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "import": "./lib/index.js",
+      "default": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/**/*.js",
+    "lib/**/*.d.ts",
+    "cordis.patch.yml",
+    "docs/**/*.md",
+    "README.md",
+    "README.zh-CN.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.test.json && vitest run && tsc -p tsconfig.json",
+    "prepare": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:e2e": "tsc -p tsconfig.json && node scripts/live-e2e.mjs",
+    "typecheck": "tsc -p tsconfig.test.json"
+  },
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0"
+  },
+  "packageManager": "pnpm@11.7.0",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": ">=4.0.1-rc.1 <5",
+    "@deepseek-ai/dsh-credentials": ">=0.1.0-rc.6 <1",
+    "@deepseek-ai/dsh-tools": ">=0.1.0-rc.6 <1",
+    "@deepseek-ai/dsh-web": ">=0.1.0-rc.6 <1"
+  },
+  "dependencies": {
+    "@deepseek-ai/schemastery": ">=3.18.1-rc.1 <4"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "4.0.1",
+    "@deepseek-ai/dsh-credentials": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-llm": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-system-prompt": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-tools": "0.1.0-rc.6",
+    "@deepseek-ai/dsh-web": "0.1.0-rc.6",
+    "@types/node": "^22.20.0",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.8"
+  }
+}
