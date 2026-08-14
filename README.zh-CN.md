@@ -1,65 +1,70 @@
 <div align="center">
-  <a href="https://anysearch.com"><img src="docs/assets/anysearch-logo.svg" alt="AnySearch Logo" width="96" height="96"></a>
-  <h1>AnySearch for DeepSeek Harness</h1>
-  <p>为 DeepSeek Harness 提供原生网页搜索和 AnySearch 高级工具。</p>
-  <p><a href="https://github.com/anysearch-team/anysearch-dsh/actions/workflows/ci.yml"><img src="https://github.com/anysearch-team/anysearch-dsh/workflows/CI/badge.svg" alt="CI 状态"></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT 许可证"></a> <a href="package.json"><img src="https://img.shields.io/badge/Node.js-22.19%20%7C%2024%2B-339933?logo=nodedotjs&amp;logoColor=white" alt="Node.js 22.19 或 24 及以上版本"></a> <a href="https://github.com/deepseek-ai/deepseek-harness"><img src="https://img.shields.io/badge/dsh-plugin-4F46E5" alt="DeepSeek Harness 插件"></a></p>
+  <a href="https://anysearch.com"><img src="https://anysearch.com/favicon.ico" alt="AnySearch Logo" width="96" height="96"></a>
+  <h1>@anysearch/dsh</h1>
+  <p>AnySearch 面向 DeepSeek Harness 的官方网页搜索插件。</p>
+  <p><a href="https://www.npmjs.com/package/@anysearch/dsh"><img src="https://img.shields.io/npm/v/%40anysearch%2Fdsh?logo=npm" alt="npm 版本"></a> <a href="https://www.npmjs.com/package/@anysearch/dsh"><img src="https://img.shields.io/npm/dm/%40anysearch%2Fdsh?logo=npm" alt="npm 下载量"></a> <a href="https://github.com/anysearch-team/anysearch-dsh/actions/workflows/ci.yml"><img src="https://github.com/anysearch-team/anysearch-dsh/workflows/CI/badge.svg" alt="CI 状态"></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT 许可证"></a> <a href="https://github.com/deepseek-ai/deepseek-harness"><img src="https://img.shields.io/badge/DeepSeek-Harness-4F46E5" alt="DeepSeek Harness 插件"></a></p>
   <p><a href="README.md">English</a> | <strong>简体中文</strong></p>
 </div>
 
-`anysearch-dsh` 将 [AnySearch](https://anysearch.com) 接入 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)。它既能驱动原生 `web_search` 工具，也提供能力发现、垂直搜索和有界批量搜索。
+`@anysearch/dsh` 将 [AnySearch](https://anysearch.com) 接入 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)。它既能驱动 Harness 原生的 `web_search`，也提供能力发现、垂直搜索和有界批量搜索。
 
-## 安装
+## 快速开始
 
-需要 Node.js 22.19 或 Node.js 24+，以及 pnpm 11.7。
+需要 Node.js 22.19 或 Node.js 24+、pnpm 11.7 和 DeepSeek Harness。DSH 插件命令使用 pnpm 管理 profile 依赖，因此 `pnpm` 必须位于 `PATH` 中。
+
+将插件安装到 `web` profile：
 
 ```sh
-git clone https://github.com/anysearch-team/anysearch-dsh.git
-cd anysearch-dsh
-pnpm install
-pnpm run check
-dsh plugin --profile web add .
+npx -y @deepseek-ai/dsh plugin --profile web add @anysearch/dsh
 ```
 
-DeepSeek Harness 仍处于开发预览阶段。本插件使用其当前的 `ctx.web` Provider 接口，Harness 出现不兼容变更后可能需要同步升级。
+启动 DeepSeek Harness：
 
-启动 profile 前，请配置 API Key。
+```sh
+npx -y @deepseek-ai/dsh web
+```
 
-推荐将它写入 DSH 管理的凭据文件 `$DSH_HOME/.credentials.yaml`，默认位置是 `~/.dsh/.credentials.yaml`：
+快速体验不需要 API Key。未配置时，请求使用 AnySearch 匿名额度。
+
+## 提供什么
+
+- 通过 Harness 内置的 `web_search` 返回 AnySearch 搜索结果。
+- 实时发现可用领域和垂直搜索能力。
+- 使用标签、参数、地区和语言执行高级搜索。
+- 并发执行一至五个搜索，并保留单项失败。
+- 按需提供清洗后的网页正文，并限制向模型展示的字符数。
+- 支持调用方取消、响应校验和不会向重定向目标泄露凭据的安全策略。
+
+## 可选 API Key
+
+插件可以使用 AnySearch 匿名额度，无需 API Key。需要账号级额度时，将凭据写入 `$DSH_HOME/.credentials.yaml`，默认位置是 `~/.dsh/.credentials.yaml`：
 
 ```yaml
 ANYSEARCH_API_KEY: "as_sk_your_key"
 ```
 
-插件会在每次操作时重新解析该引用。修改受管凭据后，下一次操作即可使用新值，无需重启 DSH。启动进程的环境变量仍具有最高优先级：
+插件会在每次操作时解析受管凭据，因此轮换凭据后，下一次请求即可使用新值，无需重启 DSH。启动进程的 `ANYSEARCH_API_KEY` 环境变量具有更高优先级。
+
+可以检查最终组合配置，输出中不会出现真实凭据值：
 
 ```sh
-export ANYSEARCH_API_KEY=as_sk_your_key
-dsh --profile web --dump-config
-dsh --profile web
+npx -y @deepseek-ai/dsh --profile web --dump-config
 ```
 
-PowerShell：
+## 工具
 
-```powershell
-$env:ANYSEARCH_API_KEY = 'as_sk_your_key'
-dsh --profile web --dump-config
-dsh --profile web
-```
+| 使用场景 | Harness 工具 |
+|---|---|
+| 普通网页搜索 | `web_search` |
+| 查看可用领域和标签 | `anysearch_capabilities` |
+| 垂直或参数化搜索 | `anysearch_search` |
+| 一次执行一至五个搜索 | `anysearch_batch_search` |
 
-API Key 不是必填项。未配置该凭据引用时，请求使用 AnySearch 匿名额度。`--dump-config` 只显示 `ANYSEARCH_API_KEY` 引用，不会显示凭据值。
-
-## 组合方式
-
-该 bundle 会修改两处组合配置：
-
-1. 将现有 `ctx.web` 搜索 Provider 设为 `anysearch`；
-2. 挂载本包的 `web-search-anysearch` 插件。
-
-插件注册一个 Provider 和三个模型可见的高级工具。普通查询仍使用 `web_search`；垂直查询先通过 `anysearch_capabilities` 获取标签，再使用 `anysearch_search` 或 `anysearch_batch_search` 执行。
+对于普通提示词，让 Harness 自动选择工具即可。模型可以先读取实时领域和参数定义，再执行专门搜索。
 
 ## 配置
 
-随包提供的 `cordis.patch.yml` 会读取 `ANYSEARCH_API_KEY`。profile 也可以用完整配置替换 Provider 行：
+随包提供的 profile 层会将 AnySearch 设为现有 `ctx.web` Provider，并挂载高级工具。profile 可以使用完整配置替换 Provider 行：
 
 ```yaml
 - id: web-search-anysearch
@@ -69,33 +74,33 @@ API Key 不是必填项。未配置该凭据引用时，请求使用 AnySearch �
     maxRenderedContentChars: 12000
 ```
 
-| 字段 | 默认值 | 含义 |
+| 字段 | 默认值 | 用途 |
 |---|---|---|
-| `apiKeyEnv` | `ANYSEARCH_API_KEY` | 每次操作时解析的凭据引用；缺失时使用匿名访问 |
-| `baseURL` | `https://api.anysearch.com` | API 基础地址；客户端会追加公开的 `/v1/*` 路径 |
-| `maxRenderedContentChars` | `12000` | 单次高级工具调用可向模型展示的清洗正文字符总数 |
+| `apiKeyEnv` | `ANYSEARCH_API_KEY` | DSH 凭据引用；缺失时使用匿名访问 |
+| `baseURL` | `https://api.anysearch.com` | AnySearch API 基础地址 |
+| `maxRenderedContentChars` | `12000` | 单次高级工具调用向模型展示的清洗正文字符上限 |
 
-## Provider 行为
+## 管理插件
 
-- 将 Harness 请求中的 `query` 和可选 `maxResults` 映射为 `query` 和 `max_results`。
-- 将 AnySearch 的 `title`、`url` 和 `snippet` 映射为 Provider 通用结果。
-- 不把 AnySearch 的完整清洗正文 `content` 放入模型结果。
-- 将调用方取消操作报告为 `WEB_ABORTED`。
-- 将网络、HTTP 和响应校验失败报告为 `WEB_PROVIDER_ERROR`。
-- 在凭据或查询可能被转发到目标地址前拒绝 HTTP 重定向。
-- 发送 `X-Anysearch-Client: dsh/0.1.0`，用于流量归因。
+更新：
 
-## 高级工具
+```sh
+npx -y @deepseek-ai/dsh plugin --profile web update @anysearch/dsh
+```
 
-`anysearch_capabilities` 返回实时领域目录。传入最多五个选定领域，可以获取对应的准确标签和参数定义。两级目录结果都会在规范结果和模型可见结果中保留请求 ID。
+移除：
 
-`anysearch_search` 接受 `query`、`maxResults`、`tag`、`params`、`zone`、`language` 和 `includeContent`。规范结果会保留 `requestId`、耗时元数据和完整的已校验内容。仅当 `includeContent` 为 `true` 时，原生渲染才会包含清洗正文，并受 `maxRenderedContentChars` 限制。
+```sh
+npx -y @deepseek-ai/dsh plugin --profile web remove @anysearch/dsh
+```
 
-`anysearch_batch_search` 接受一至五个完整搜索项。它会并发启动相互独立的 HTTP 请求，保持输入顺序，保留单项失败，并在调用方取消时终止所有进行中的请求。整批请求共享同一个正文渲染额度。
+## 兼容性与限制
 
-三个工具与 Provider 共用 HTTP 客户端、凭据引用、取消信号、重定向策略和响应校验。
+- DeepSeek Harness 仍处于开发预览阶段，可能发布不兼容变更。
+- 本插件当前不提供 `anysearch_extract`。
+- 请通过 DSH 管理的凭据文件或环境变量配置 API Key；DSH 设置页当前不提供第三方 Provider 凭据输入项。
 
-## 中文文档
+## 文档
 
 - [详细使用指南](docs/user-guide.zh-CN.md)
 - [DSH 插件与 Skill、MCP、HTTP 接入方式对比](docs/integration-options.zh-CN.md)
@@ -103,23 +108,17 @@ API Key 不是必填项。未配置该凭据引用时，请求使用 AnySearch �
 ## 开发
 
 ```sh
-pnpm run typecheck
-pnpm run test
-pnpm run build
+git clone https://github.com/anysearch-team/anysearch-dsh.git
+cd anysearch-dsh
+pnpm install
+pnpm run check
 ```
 
-真实 API E2E 测试需要显式开启。它会组装真实的 DSH Provider 和工具，并验证能力目录、垂直搜索、批量搜索、取消、凭据行为、UI 意图和插件卸载。匿名模式不会读取环境中的凭据：
+真实 AnySearch E2E 测试需要显式开启。匿名模式不会读取环境中的凭据：
 
 ```sh
 ANYSEARCH_E2E=1 ANYSEARCH_E2E_ANONYMOUS=1 pnpm run test:e2e
 ```
-
-删除 `ANYSEARCH_E2E_ANONYMOUS`，即可使用环境中的 `ANYSEARCH_API_KEY` 测试。
-
-## 已知限制
-
-- 本插件当前不提供 `anysearch_extract`。
-- 请通过 DSH 管理的凭据文件或环境变量配置 API Key；DSH 设置页不提供第三方 Provider 凭据输入项。
 
 ## 许可证
 

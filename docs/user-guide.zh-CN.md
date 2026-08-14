@@ -2,13 +2,13 @@
 
 [English](../README.md) | **简体中文**
 
-适用版本：`anysearch-dsh 0.1.0`
+适用版本：`@anysearch/dsh 0.1.0`
 
 最后核对：2026-08-14
 
 ## 这是什么
 
-`anysearch-dsh` 是 AnySearch 面向 DeepSeek Harness 的搜索插件。安装后，DeepSeek Harness 内置的 `web_search` 工具会使用 AnySearch 完成实时网页搜索。
+`@anysearch/dsh` 是 AnySearch 面向 DeepSeek Harness 的搜索插件。安装后，DeepSeek Harness 内置的 `web_search` 工具会使用 AnySearch 完成实时网页搜索。
 
 你不需要让模型学习一个新的普通搜索工具，也不需要单独配置 MCP Server。Agent 仍然调用 Harness 原生的 `web_search`，插件负责把请求发送到 AnySearch，并将结果转换为 Harness 可以展示和引用的来源。
 
@@ -43,24 +43,26 @@
 
 - Node.js `22.19` 或更高版本，或者 Node.js `24+`；
 - pnpm `11.7`；
-- 已安装并可以运行的 DeepSeek Harness `dsh`；
+- 可以通过 `npx` 运行 DeepSeek Harness；
 - 可访问 `https://api.anysearch.com`。
 
 DeepSeek Harness 当前仍处于开发预览阶段。Harness 发布不兼容变更后，插件可能需要同步升级。
 
-## 从源码安装
+## 安装
 
-当前仓库尚未提供 npm 正式版本，先从 GitHub checkout 安装：
+将 npm 包安装到 DeepSeek Harness 的 `web` profile：
 
 ```bash
-git clone https://github.com/anysearch-team/anysearch-dsh.git
-cd anysearch-dsh
-pnpm install
-pnpm run check
-dsh plugin --profile web add .
+npx -y @deepseek-ai/dsh plugin --profile web add @anysearch/dsh
 ```
 
 这一步会向 `web` profile 添加插件，并把 AnySearch 选为该 profile 的搜索 Provider。
+
+然后启动 DeepSeek Harness：
+
+```bash
+npx -y @deepseek-ai/dsh web
+```
 
 ## 配置 API Key
 
@@ -88,16 +90,16 @@ Linux 或 macOS：
 
 ```bash
 export ANYSEARCH_API_KEY="as_sk_your_key"
-dsh --profile web --dump-config
-dsh --profile web
+npx -y @deepseek-ai/dsh --profile web --dump-config
+npx -y @deepseek-ai/dsh --profile web
 ```
 
 Windows PowerShell：
 
 ```powershell
 $env:ANYSEARCH_API_KEY = 'as_sk_your_key'
-dsh --profile web --dump-config
-dsh --profile web
+npx -y @deepseek-ai/dsh --profile web --dump-config
+npx -y @deepseek-ai/dsh --profile web
 ```
 
 DSH 的标准本地凭据 Provider 按以下顺序解析同名引用：启动环境、`$DSH_HOME/.credentials.yaml`、当前调用目录的 `.env`、`$DSH_HOME/.env`。`--dump-config` 用来确认插件和 Provider 已进入最终配置，其中只应出现 `apiKeyEnv: ANYSEARCH_API_KEY`，不应出现真实 Key。请不要把真实 API Key 写入 Git 仓库、截图、日志或问题报告。
@@ -105,7 +107,7 @@ DSH 的标准本地凭据 Provider 按以下顺序解析同名引用：启动环
 如果不设置 `ANYSEARCH_API_KEY`，直接启动即可：
 
 ```bash
-dsh --profile web
+npx -y @deepseek-ai/dsh --profile web
 ```
 
 匿名请求受共享免费额度和更低限流约束。
@@ -162,7 +164,7 @@ anysearch_batch_search
 先检查最终配置：
 
 ```bash
-dsh --profile web --dump-config
+npx -y @deepseek-ai/dsh --profile web --dump-config
 ```
 
 配置中应包含：
@@ -177,7 +179,7 @@ dsh --profile web --dump-config
 
 ```yaml
 - id: web-search-anysearch
-  name: anysearch-dsh
+  name: '@anysearch/dsh'
 ```
 
 然后启动 profile，提出一个明确需要联网搜索的问题。如果 Provider 未注册，Harness 会报告配置的搜索 Provider 缺失；如果 AnySearch 返回错误，工具会显示 AnySearch 的安全错误消息或 HTTP 状态说明。

@@ -1,70 +1,70 @@
 <div align="center">
-  <a href="https://anysearch.com"><img src="docs/assets/anysearch-logo.svg" alt="AnySearch logo" width="96" height="96"></a>
-  <h1>AnySearch for DeepSeek Harness</h1>
-  <p>Native web search and advanced AnySearch tools for DeepSeek Harness.</p>
-  <p><a href="https://github.com/anysearch-team/anysearch-dsh/actions/workflows/ci.yml"><img src="https://github.com/anysearch-team/anysearch-dsh/workflows/CI/badge.svg" alt="CI status"></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license"></a> <a href="package.json"><img src="https://img.shields.io/badge/Node.js-22.19%20%7C%2024%2B-339933?logo=nodedotjs&amp;logoColor=white" alt="Node.js 22.19 or 24 and newer"></a> <a href="https://github.com/deepseek-ai/deepseek-harness"><img src="https://img.shields.io/badge/dsh-plugin-4F46E5" alt="DeepSeek Harness plugin"></a></p>
+  <a href="https://anysearch.com"><img src="https://anysearch.com/favicon.ico" alt="AnySearch logo" width="96" height="96"></a>
+  <h1>@anysearch/dsh</h1>
+  <p>Official AnySearch web search plugin for DeepSeek Harness.</p>
+  <p><a href="https://www.npmjs.com/package/@anysearch/dsh"><img src="https://img.shields.io/npm/v/%40anysearch%2Fdsh?logo=npm" alt="npm version"></a> <a href="https://www.npmjs.com/package/@anysearch/dsh"><img src="https://img.shields.io/npm/dm/%40anysearch%2Fdsh?logo=npm" alt="npm downloads"></a> <a href="https://github.com/anysearch-team/anysearch-dsh/actions/workflows/ci.yml"><img src="https://github.com/anysearch-team/anysearch-dsh/workflows/CI/badge.svg" alt="CI status"></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license"></a> <a href="https://github.com/deepseek-ai/deepseek-harness"><img src="https://img.shields.io/badge/DeepSeek-Harness-4F46E5" alt="DeepSeek Harness plugin"></a></p>
   <p><strong>English</strong> | <a href="README.zh-CN.md">简体中文</a></p>
 </div>
 
-`anysearch-dsh` connects [AnySearch](https://anysearch.com) to [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness). It powers the native `web_search` tool and adds capability discovery, vertical search, and bounded batch search.
+`@anysearch/dsh` connects [AnySearch](https://anysearch.com) to [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness). It powers Harness's native `web_search` and adds capability discovery, vertical search, and bounded batch search.
 
-## Install
+## Quick start
 
-Requires Node.js 22.19 or Node.js 24+, plus pnpm 11.7.
+Requires Node.js 22.19 or Node.js 24+, pnpm 11.7, and DeepSeek Harness. The DSH plugin command uses pnpm to manage profile dependencies, so `pnpm` must be available on `PATH`.
+
+Install the plugin into the `web` profile:
 
 ```sh
-git clone https://github.com/anysearch-team/anysearch-dsh.git
-cd anysearch-dsh
-pnpm install
-pnpm run check
-dsh plugin --profile web add .
+npx -y @deepseek-ai/dsh plugin --profile web add @anysearch/dsh
 ```
 
-DeepSeek Harness is in developer preview. This plugin follows its current `ctx.web` provider interface and may require updates after breaking Harness changes.
+Start DeepSeek Harness:
 
-Set an API key before starting the profile:
+```sh
+npx -y @deepseek-ai/dsh web
+```
 
-Add it to the DSH-managed credential document at `$DSH_HOME/.credentials.yaml`
-(`~/.dsh/.credentials.yaml` by default):
+No API key is required for a quick start. Requests use AnySearch's anonymous quota until you configure one.
+
+## What you get
+
+- Native AnySearch results through Harness's built-in `web_search`.
+- Live capability and vertical-search discovery.
+- Advanced search with tags, parameters, region, and language.
+- Concurrent batches of one to five searches with partial-failure handling.
+- Optional cleaned page content with a bounded rendering budget.
+- Caller cancellation, response validation, and redirect-safe credential handling.
+
+## Optional API key
+
+The plugin works without an API key using AnySearch's anonymous quota. For account-level quota, add the credential to `$DSH_HOME/.credentials.yaml` (`~/.dsh/.credentials.yaml` by default):
 
 ```yaml
 ANYSEARCH_API_KEY: "as_sk_your_key"
 ```
 
-The plugin resolves this reference for every operation, so a managed credential
-rotation reaches the next operation without restarting DSH. A launching
-environment variable remains the highest-priority source:
+The plugin resolves the managed credential for every operation, so credential rotation reaches the next request without restarting DSH. A launching `ANYSEARCH_API_KEY` environment variable has higher priority.
+
+Inspect the composed profile without exposing the credential value:
 
 ```sh
-export ANYSEARCH_API_KEY=as_sk_your_key
-dsh --profile web --dump-config
-dsh --profile web
+npx -y @deepseek-ai/dsh --profile web --dump-config
 ```
 
-PowerShell:
+## Tools
 
-```powershell
-$env:ANYSEARCH_API_KEY = 'as_sk_your_key'
-dsh --profile web --dump-config
-dsh --profile web
-```
+| Use case | Harness tool |
+|---|---|
+| Ordinary web search | `web_search` |
+| Discover available domains and tags | `anysearch_capabilities` |
+| Vertical or parameterized search | `anysearch_search` |
+| Run one to five searches together | `anysearch_batch_search` |
 
-The API key is optional. Without a configured value for the reference, requests
-use AnySearch's anonymous quota. `--dump-config` shows only the
-`ANYSEARCH_API_KEY` reference, never the credential value.
-
-## Composition
-
-The bundle contributes two composition changes:
-
-1. it selects `anysearch` as the existing `ctx.web` search provider;
-2. it mounts this package's `web-search-anysearch` plugin.
-
-The plugin registers the Provider and three model-facing advanced tools. Ordinary queries still use `web_search`; vertical queries discover tags through `anysearch_capabilities` and execute through `anysearch_search` or `anysearch_batch_search`.
+For ordinary prompts, let Harness select the tool. Models can discover live domain and parameter definitions before making a specialized search.
 
 ## Configuration
 
-The bundled `cordis.patch.yml` reads `ANYSEARCH_API_KEY`. A profile can replace the provider row with its own complete configuration:
+The bundled profile layer selects AnySearch as the existing `ctx.web` provider and mounts the advanced tools. A profile can replace the provider row with its own complete configuration:
 
 ```yaml
 - id: web-search-anysearch
@@ -74,57 +74,51 @@ The bundled `cordis.patch.yml` reads `ANYSEARCH_API_KEY`. A profile can replace 
     maxRenderedContentChars: 12000
 ```
 
-| Field | Default | Meaning |
+| Field | Default | Purpose |
 |---|---|---|
-| `apiKeyEnv` | `ANYSEARCH_API_KEY` | Credential reference resolved for every operation; missing uses anonymous access |
-| `baseURL` | `https://api.anysearch.com` | API base URL; the client appends public `/v1/*` paths |
-| `maxRenderedContentChars` | `12000` | Aggregate cleaned-content characters rendered by one advanced tool call |
+| `apiKeyEnv` | `ANYSEARCH_API_KEY` | DSH credential reference; missing uses anonymous access |
+| `baseURL` | `https://api.anysearch.com` | AnySearch API base URL |
+| `maxRenderedContentChars` | `12000` | Maximum cleaned-content characters rendered to the model per advanced tool call |
 
-## Provider behavior
+## Manage the plugin
 
-- Sends the harness request's `query` and optional `maxResults` as `query` and `max_results`.
-- Maps AnySearch `title`, `url`, and `snippet` into the provider-neutral result.
-- Does not put AnySearch's full cleaned `content` field into the model result.
-- Propagates caller cancellation as `WEB_ABORTED`.
-- Reports transport, HTTP, and response-validation failures as `WEB_PROVIDER_ERROR`.
-- Rejects HTTP redirects before a credential or query can be forwarded to the redirect target.
-- Sends `X-Anysearch-Client: dsh/0.1.0` for traffic attribution.
+Update:
 
-## Advanced tools
+```sh
+npx -y @deepseek-ai/dsh plugin --profile web update @anysearch/dsh
+```
 
-`anysearch_capabilities` lists the live domain catalog. Pass up to five selected domains to receive their exact tags and parameter definitions. Both catalog levels preserve the request ID in canonical and model-visible results.
+Remove:
 
-`anysearch_search` accepts `query`, `maxResults`, `tag`, `params`, `zone`, `language`, and `includeContent`. Its canonical result preserves `requestId`, timing metadata, and full validated content. Native rendering includes cleaned content only when `includeContent` is true and caps it with `maxRenderedContentChars`.
+```sh
+npx -y @deepseek-ai/dsh plugin --profile web remove @anysearch/dsh
+```
 
-`anysearch_batch_search` accepts one to five complete search items. It starts the independent HTTP requests concurrently, preserves input order, retains partial failures, cancels every in-flight request on caller cancellation, and shares one rendering budget across the batch.
+## Compatibility and limitations
 
-All three tools use the same HTTP client, credential reference, cancellation signal, redirect policy, and response validation as the Provider.
+- DeepSeek Harness is in developer preview and may make compatibility-breaking changes.
+- This plugin currently does not provide `anysearch_extract`.
+- Configure the API key through DSH-managed credentials or an environment variable; the DSH settings page does not currently provide a third-party Provider credential field.
 
-## Chinese documentation
+## Documentation
 
-- [使用指南](docs/user-guide.zh-CN.md)
-- [DSH 插件与 Skill、MCP、HTTP 接入方式对比](docs/integration-options.zh-CN.md)
+- [Chinese user guide](docs/user-guide.zh-CN.md)
+- [DSH plugin, Skill, MCP, and HTTP integration comparison](docs/integration-options.zh-CN.md)
 
 ## Development
 
 ```sh
-pnpm run typecheck
-pnpm run test
-pnpm run build
+git clone https://github.com/anysearch-team/anysearch-dsh.git
+cd anysearch-dsh
+pnpm install
+pnpm run check
 ```
 
-The live API E2E is opt-in. It assembles the real DSH Provider and tools, then exercises the catalog, vertical search, batches, cancellation, credential behavior, UI intent, and plugin disposal. Anonymous mode avoids ambient credentials:
+The live AnySearch E2E suite is opt-in. Run it without ambient credentials in anonymous mode:
 
 ```sh
 ANYSEARCH_E2E=1 ANYSEARCH_E2E_ANONYMOUS=1 pnpm run test:e2e
 ```
-
-Omit `ANYSEARCH_E2E_ANONYMOUS` to test the `ANYSEARCH_API_KEY` supplied by the environment.
-
-## Known limitations
-
-- This plugin does not currently provide `anysearch_extract`.
-- Configure the API key through DSH-managed credentials or an environment variable; the DSH settings page does not provide a third-party Provider credential field.
 
 ## License
 

@@ -1,5 +1,5 @@
 {
-  "name": "anysearch-dsh",
+  "name": "@anysearch/dsh",
   "version": "0.1.0",
   "description": "AnySearch web search provider and advanced tools for DeepSeek Harness",
   "keywords": [
@@ -51,6 +51,10 @@
     "node": "^22.19.0 || >=24.0.0"
   },
   "packageManager": "pnpm@11.7.0",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
