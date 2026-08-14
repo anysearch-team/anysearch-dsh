@@ -12,6 +12,8 @@
 
 需要 Node.js 22.19 或 Node.js 24+、pnpm 11.7 和 DeepSeek Harness。DSH 插件命令使用 pnpm 管理 profile 依赖，因此 `pnpm` 必须位于 `PATH` 中。
 
+Windows、Linux 和 macOS 使用相同的安装命令。安装前请确保 Node.js、`npx` 和 `pnpm` 均可从 `PATH` 直接运行。
+
 将插件安装到 `web` profile：
 
 ```sh
@@ -39,6 +41,8 @@ npx -y @deepseek-ai/dsh web
 
 插件可以使用 AnySearch 匿名额度，无需 API Key。需要账号级额度时，将凭据写入 `$DSH_HOME/.credentials.yaml`，默认位置是 `~/.dsh/.credentials.yaml`：
 
+还没有 API Key？访问 [anysearch.com](https://anysearch.com) 注册并登录，然后前往 [API Keys](https://www.anysearch.com/console/api-keys) 获取。
+
 ```yaml
 ANYSEARCH_API_KEY: "as_sk_your_key"
 ```
@@ -64,7 +68,9 @@ npx -y @deepseek-ai/dsh --profile web --dump-config
 
 ## 配置
 
-随包提供的 profile 层会将 AnySearch 设为现有 `ctx.web` Provider，并挂载高级工具。profile 可以使用完整配置替换 Provider 行：
+随包提供的 profile 层会自动将 AnySearch 设为现有 `ctx.web` Provider，并挂载高级工具，默认无需修改。
+
+如需自定义，请让 AI 助手（或手工）把下面的完整条目加入目标 DSH profile 的用户配置层，以覆盖随包提供的 `id: web-search-anysearch` 配置。保持 `id` 不变，完整替换 `config`，不要使用不同 ID 新增第二个 AnySearch Provider：
 
 ```yaml
 - id: web-search-anysearch

@@ -12,6 +12,8 @@
 
 Requires Node.js 22.19 or Node.js 24+, pnpm 11.7, and DeepSeek Harness. The DSH plugin command uses pnpm to manage profile dependencies, so `pnpm` must be available on `PATH`.
 
+Windows, Linux, and macOS use the same installation command. Before installing, ensure that Node.js, `npx`, and `pnpm` can all be run directly from `PATH`.
+
 Install the plugin into the `web` profile:
 
 ```sh
@@ -39,6 +41,8 @@ No API key is required for a quick start. Requests use AnySearch's anonymous quo
 
 The plugin works without an API key using AnySearch's anonymous quota. For account-level quota, add the credential to `$DSH_HOME/.credentials.yaml` (`~/.dsh/.credentials.yaml` by default):
 
+Need an API key? Sign up or sign in at [anysearch.com](https://anysearch.com), then visit [API Keys](https://www.anysearch.com/console/api-keys) to get one.
+
 ```yaml
 ANYSEARCH_API_KEY: "as_sk_your_key"
 ```
@@ -64,7 +68,9 @@ For ordinary prompts, let Harness select the tool. Models can discover live doma
 
 ## Configuration
 
-The bundled profile layer selects AnySearch as the existing `ctx.web` provider and mounts the advanced tools. A profile can replace the provider row with its own complete configuration:
+The bundled profile layer automatically selects AnySearch as the existing `ctx.web` provider and mounts the advanced tools, so no changes are required by default.
+
+To customize it, ask an AI assistant—or edit it manually—to add the complete block below to the target DSH profile's user configuration layer, overriding the bundled `id: web-search-anysearch` entry. Keep the `id` unchanged, replace the complete `config`, and do not add a second AnySearch provider under a different ID:
 
 ```yaml
 - id: web-search-anysearch
