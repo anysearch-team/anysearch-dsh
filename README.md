@@ -12,9 +12,8 @@
 
 ### For AI Agents
 
-Fetch the complete installation guide, read it end to end, and then follow it step by step:
-
 ```sh
+# Fetch the complete installation guide, read it end to end, and then follow it step by step:
 curl -fsSL https://raw.githubusercontent.com/anysearch-team/anysearch-dsh/refs/heads/main/docs/agent-installation.md
 ```
 

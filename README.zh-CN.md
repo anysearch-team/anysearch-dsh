@@ -12,9 +12,8 @@
 
 ### 面向 AI Agent
 
-获取完整安装指南，通读全文，然后严格按步骤执行：
-
 ```sh
+# 获取完整安装指南，通读全文，然后严格按步骤执行：
 curl -fsSL https://raw.githubusercontent.com/anysearch-team/anysearch-dsh/refs/heads/main/docs/agent-installation.md
 ```
 
