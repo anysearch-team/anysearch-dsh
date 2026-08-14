@@ -12,41 +12,13 @@
 
 需要 Node.js 22.19 或 Node.js 24+，以及 pnpm 11.7。
 
-先看你平时如何启动 DSH。两种方法都会把 AnySearch 加入 DSH 浏览器应用使用的 `web` profile。
-
-### 方法 A：终端可以直接运行 `dsh`
-
-如果你在任意目录执行 `dsh --version` 都能成功，请使用这组命令：
-
 ```sh
 git clone https://github.com/anysearch-team/anysearch-dsh.git
 cd anysearch-dsh
 pnpm install
 pnpm run check
 dsh plugin --profile web add .
-dsh --profile web --dump-config
 ```
-
-### 方法 B：从 DSH 源码运行
-
-如果你平时使用 `corepack pnpm dsh` 启动 DSH，请使用这组命令。下面假设 `anysearch-dsh` 和 `deepseek-harness` 是同级目录：
-
-```sh
-git clone https://github.com/anysearch-team/anysearch-dsh.git
-cd anysearch-dsh
-corepack pnpm install
-corepack pnpm run check
-
-cd ../deepseek-harness
-corepack pnpm dsh plugin --profile web add ../anysearch-dsh
-corepack pnpm dsh --profile web --dump-config
-```
-
-如果两个仓库不在同一级目录，请将 `../anysearch-dsh` 替换为插件的绝对路径。
-
-如果两个仓库及其依赖已经存在，只需执行对应方法的最后两条命令。
-
-如果安装时 DSH 正在运行，请关闭它，再使用同一个 `web` profile 重新启动。运行中的进程不会加载新安装的 bundle。
 
 DeepSeek Harness 仍处于开发预览阶段。本插件使用其当前的 `ctx.web` Provider 接口，Harness 出现不兼容变更后可能需要同步升级。
 
@@ -57,8 +29,6 @@ DeepSeek Harness 仍处于开发预览阶段。本插件使用其当前的 `ctx.
 ```yaml
 ANYSEARCH_API_KEY: "as_sk_your_key"
 ```
-
-`as_sk_your_key` 是占位符，必须替换为有效 Key。原样保存时，插件会在发送 HTTP 请求前拒绝它；如需匿名访问，请删除整条配置。
 
 插件会在每次操作时重新解析该引用。修改受管凭据后，下一次操作即可使用新值，无需重启 DSH。启动进程的环境变量仍具有最高优先级：
 
