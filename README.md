@@ -12,13 +12,41 @@
 
 Requires Node.js 22.19 or Node.js 24+, plus pnpm 11.7.
 
+Choose the method that matches how you start DSH. Both methods add AnySearch to `web`, the profile used by the DSH browser app.
+
+### A. `dsh` works directly in your terminal
+
+Use this method if `dsh --version` works from any directory:
+
 ```sh
 git clone https://github.com/anysearch-team/anysearch-dsh.git
 cd anysearch-dsh
 pnpm install
 pnpm run check
 dsh plugin --profile web add .
+dsh --profile web --dump-config
 ```
+
+### B. You run DSH from its source repository
+
+Use this method if you normally start DSH with `corepack pnpm dsh`. The commands below assume `anysearch-dsh` and `deepseek-harness` are sibling directories:
+
+```sh
+git clone https://github.com/anysearch-team/anysearch-dsh.git
+cd anysearch-dsh
+corepack pnpm install
+corepack pnpm run check
+
+cd ../deepseek-harness
+corepack pnpm dsh plugin --profile web add ../anysearch-dsh
+corepack pnpm dsh --profile web --dump-config
+```
+
+If the repositories are stored elsewhere, replace `../anysearch-dsh` with its absolute path.
+
+If both repositories and their dependencies already exist, run only the final two commands for your method.
+
+If DSH was running during installation, stop and restart it with the same `web` profile. A running process does not load a newly installed bundle.
 
 DeepSeek Harness is in developer preview. This plugin follows its current `ctx.web` provider interface and may require updates after breaking Harness changes.
 
@@ -30,6 +58,8 @@ Add it to the DSH-managed credential document at `$DSH_HOME/.credentials.yaml`
 ```yaml
 ANYSEARCH_API_KEY: "as_sk_your_key"
 ```
+
+`as_sk_your_key` is a placeholder. Replace it with a valid key; storing it literally is rejected before any HTTP request. Remove the entry entirely to use anonymous access.
 
 The plugin resolves this reference for every operation, so a managed credential
 rotation reaches the next operation without restarting DSH. A launching

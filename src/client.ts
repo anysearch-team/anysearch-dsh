@@ -18,6 +18,11 @@ export { ANYSEARCH_DSH_CLIENT_ID } from './version.ts'
 /** Public AnySearch API origin. */
 export const ANYSEARCH_DEFAULT_BASE_URL = 'https://api.anysearch.com'
 
+const API_KEY_PLACEHOLDERS = new Set([
+  'ANYSEARCH_API_KEY',
+  'as_sk_your_key',
+])
+
 /** AnySearch operation names retained in safe diagnostics. */
 export type AnySearchOperation = 'search' | 'domains' | 'sub_domains'
 
@@ -25,6 +30,8 @@ export type AnySearchOperation = 'search' | 'domains' | 'sub_domains'
 export interface AnySearchClientOptions {
   /** Resolve the API key for one operation; `undefined` uses anonymous access. */
   resolveApiKey: () => Promise<string | undefined>
+  /** Credential reference whose literal value must never be sent as an API key. */
+  apiKeyReference?: string
   /** API base URL; public paths are appended to its pathname. */
   baseURL: string
 }
@@ -37,6 +44,8 @@ export class AnySearchClientError extends Error {
   readonly operation: AnySearchOperation
   /** Upstream HTTP status when a response arrived. */
   readonly httpStatus?: number
+  /** Authentication mode used for an upstream response. */
+  readonly authentication?: 'anonymous' | 'credential'
   /** AnySearch request id when the response supplied one. */
   readonly requestId?: string
   /** Upstream retry delay retained for diagnostics; the client never retries. */
@@ -48,6 +57,7 @@ export class AnySearchClientError extends Error {
       kind?: 'aborted' | 'provider'
       operation: AnySearchOperation
       httpStatus?: number
+      authentication?: 'anonymous' | 'credential'
       requestId?: string
       retryAfter?: string
       cause?: unknown
@@ -58,6 +68,7 @@ export class AnySearchClientError extends Error {
     this.kind = options.kind ?? 'provider'
     this.operation = options.operation
     if (options.httpStatus !== undefined) this.httpStatus = options.httpStatus
+    if (options.authentication !== undefined) this.authentication = options.authentication
     if (options.requestId !== undefined) this.requestId = options.requestId
     if (options.retryAfter !== undefined) this.retryAfter = options.retryAfter
   }
@@ -125,6 +136,7 @@ export class AnySearchClient {
     }
 
     const apiKey = await this.resolveApiKey(operation, signal)
+    const authentication = apiKey === undefined ? 'anonymous' : 'credential'
     const headers: Record<string, string> = {
       'accept': 'application/json',
       'user-agent': ANYSEARCH_DSH_CLIENT_ID,
@@ -157,7 +169,7 @@ export class AnySearchClient {
     } catch (error: unknown) {
       if (signal?.aborted === true || isAbortError(error)) throw aborted(operation, signal, error)
       if (!response.ok) {
-        throw upstreamError(operation, `API error`, response.status, undefined, retryAfter)
+        throw upstreamError(operation, `API error`, response.status, authentication, undefined, retryAfter)
       }
       throw new AnySearchClientError(
         `AnySearch ${operation} returned invalid JSON: ${String(error)}`,
@@ -173,7 +185,7 @@ export class AnySearchClient {
     const diagnosticRequestId = optionalStringField(value, 'request_id')
     if (!response.ok) {
       const message = messageField(value) ?? 'API error'
-      throw upstreamError(operation, message, response.status, diagnosticRequestId, retryAfter)
+      throw upstreamError(operation, message, response.status, authentication, diagnosticRequestId, retryAfter)
     }
 
     try {
@@ -182,7 +194,14 @@ export class AnySearchClient {
       const code = numberField(envelope, 'code', 'code')
       const message = stringField(envelope, 'message', 'message')
       if (code !== 0) {
-        throw upstreamError(operation, message.length > 0 ? message : `API error ${code}`, response.status, requestId, retryAfter)
+        throw upstreamError(
+          operation,
+          message.length > 0 ? message : `API error ${code}`,
+          response.status,
+          authentication,
+          requestId,
+          retryAfter,
+        )
       }
       return {
         data: record(envelope.data, 'data'),
@@ -216,7 +235,14 @@ export class AnySearchClient {
       )
     }
     const trimmed = value?.trim()
-    return trimmed === undefined || trimmed.length === 0 ? undefined : trimmed
+    if (trimmed === undefined || trimmed.length === 0) return undefined
+    if (trimmed === this.options.apiKeyReference || API_KEY_PLACEHOLDERS.has(trimmed)) {
+      throw new AnySearchClientError(
+        `AnySearch ${operation} credential is a placeholder; remove it for anonymous access or configure a valid API key`,
+        { operation },
+      )
+    }
+    return trimmed
   }
 }
 
@@ -410,11 +436,13 @@ function upstreamError(
   operation: AnySearchOperation,
   detail: string,
   httpStatus: number,
+  authentication: 'anonymous' | 'credential',
   requestId?: string,
   retryAfter?: string,
 ): AnySearchClientError {
   const facts = [
     `HTTP ${httpStatus}`,
+    `auth ${authentication}`,
     ...requestId === undefined ? [] : [`request_id ${requestId}`],
     ...retryAfter === undefined ? [] : [`retry-after ${retryAfter}`],
   ]
@@ -423,6 +451,7 @@ function upstreamError(
     {
       operation,
       httpStatus,
+      authentication,
       ...requestId === undefined ? {} : { requestId },
       ...retryAfter === undefined ? {} : { retryAfter },
     },

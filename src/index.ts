@@ -143,6 +143,7 @@ export function apply(ctx: Context, config: Config): void {
   const apiKeyEnv = credentialRef(resolved.apiKeyEnv)
   const client = new AnySearchClient({
     resolveApiKey: async () => (await ctx.credentials.resolve(apiKeyEnv))?.value,
+    apiKeyReference: resolved.apiKeyEnv,
     baseURL: resolved.baseURL,
   })
   ctx.web.registerSearchProvider(new AnySearchProvider(client))

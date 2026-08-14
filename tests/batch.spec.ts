@@ -141,7 +141,7 @@ describe('anysearch_batch_search', () => {
           query: 'limited',
           ok: false,
           error: {
-            message: 'AnySearch search failed: rate_limit_exceeded (HTTP 429, request_id req_limited, retry-after 7)',
+            message: 'AnySearch search failed: rate_limit_exceeded (HTTP 429, auth anonymous, request_id req_limited, retry-after 7)',
             httpStatus: 429,
             requestId: 'req_limited',
             retryAfter: '7',

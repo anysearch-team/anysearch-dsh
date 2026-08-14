@@ -174,6 +174,31 @@ describe('AnySearchClient capabilities', () => {
 })
 
 describe('AnySearchClient failures', () => {
+  it.each([
+    { placeholder: 'ANYSEARCH_API_KEY' },
+    { placeholder: 'as_sk_your_key' },
+    { placeholder: 'CUSTOM_KEY', apiKeyReference: 'CUSTOM_KEY' },
+  ])(
+    'rejects the placeholder credential $placeholder before sending HTTP',
+    async ({ placeholder, apiKeyReference }) => {
+      const fetchMock = vi.fn(async () => jsonResponse({
+        code: 0,
+        message: 'success',
+        data: { domains: [] },
+      }))
+      vi.stubGlobal('fetch', fetchMock)
+
+      await expect(new AnySearchClient({
+        ...options,
+        ...(apiKeyReference === undefined ? {} : { apiKeyReference }),
+        resolveApiKey: () => Promise.resolve(placeholder),
+      }).listDomains()).rejects.toThrow(
+        'AnySearch domains credential is a placeholder; remove it for anonymous access or configure a valid API key',
+      )
+      expect(fetchMock).not.toHaveBeenCalled()
+    },
+  )
+
   it('preserves safe server detail, request id, and retry-after without leaking the request', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => jsonResponse({
       code: 42903,
@@ -184,12 +209,34 @@ describe('AnySearchClient failures', () => {
 
     await expect(new AnySearchClient(options).search({ query: 'private query text' }))
       .rejects.toMatchObject({
-        message: 'AnySearch search failed: rate_limit_exceeded (HTTP 429, request_id req_limited, retry-after 8)',
+        message: 'AnySearch search failed: rate_limit_exceeded (HTTP 429, auth credential, request_id req_limited, retry-after 8)',
         operation: 'search',
         httpStatus: 429,
+        authentication: 'credential',
         requestId: 'req_limited',
         retryAfter: '8',
       })
+  })
+
+  it.each([
+    { apiKey: 'as_sk_invalid', authentication: 'credential' as const },
+    { apiKey: undefined, authentication: 'anonymous' as const },
+  ])('reports $authentication authentication on an upstream rejection', async ({ apiKey, authentication }) => {
+    const fetchMock = vi.fn(async () => jsonResponse({
+      code: 40101,
+      message: 'Invalid API key.',
+      request_id: 'req_auth',
+      data: null,
+    }, { status: 401 }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(new AnySearchClient({
+      ...options,
+      resolveApiKey: () => Promise.resolve(apiKey),
+    }).listDomains()).rejects.toMatchObject({
+      message: `AnySearch domains failed: Invalid API key. (HTTP 401, auth ${authentication}, request_id req_auth)`,
+      authentication,
+    })
   })
 
   it('rejects malformed capability data at the HTTP boundary', async () => {

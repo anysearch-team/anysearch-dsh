@@ -72,6 +72,8 @@ API Key 是可选的。建议在持续使用或需要账号级额度时配置；
 ANYSEARCH_API_KEY: "as_sk_your_key"
 ```
 
+`as_sk_your_key` 是占位符，必须替换为有效 Key。原样保存时，插件会在发送 HTTP 请求前拒绝它；如需匿名访问，请删除整条配置。
+
 Windows 默认对应：
 
 ```text

@@ -231,14 +231,16 @@ describe('AnySearchProvider failures', () => {
     await expect(provider().search({ query: 'q' }))
       .rejects.toThrow(expect.objectContaining({
         code: 'WEB_PROVIDER_ERROR',
-        message: 'AnySearch search failed: API key is invalid. (HTTP 401)',
+        message: 'AnySearch search failed: API key is invalid. (HTTP 401, auth credential)',
       }))
   })
 
   it('falls back to the HTTP status when the error body is not JSON', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response('gateway down', { status: 502 })))
     await expect(provider().search({ query: 'q' }))
-      .rejects.toThrow(expect.objectContaining({ message: 'AnySearch search failed: API error (HTTP 502)' }))
+      .rejects.toThrow(expect.objectContaining({
+        message: 'AnySearch search failed: API error (HTTP 502, auth credential)',
+      }))
   })
 
   it('maps a network failure to WEB_PROVIDER_ERROR', async () => {
@@ -308,7 +310,7 @@ describe('AnySearch plugin registration', () => {
     expect(() => resolveConfig({ baseURL: 'not a URL' })).toThrow('baseURL must be an absolute URL')
   })
 
-  it('resolves a managed credential on every operation and unregisters with its Cordis fiber', async () => {
+  it('resolves a managed credential on every operation, rejects its literal reference, and unregisters', async () => {
     const fetchMock = vi.fn(async () => jsonResponse(successEnvelope()))
     vi.stubGlobal('fetch', fetchMock)
     const ctx = new Context()
@@ -316,10 +318,14 @@ describe('AnySearch plugin registration', () => {
     await ctx.plugin(ToolRuntime)
     await ctx.plugin(WebRuntime, { searchProvider: ANYSEARCH_PROVIDER_ID })
     await ctx.plugin(MemoryCredentials)
-    const ref = credentialRef('ANYSEARCH_API_KEY')
+    const ref = credentialRef('CUSTOM_KEY')
     const fiber = await ctx.plugin(anySearchPlugin, { apiKeyEnv: ref })
 
     await expect(ctx.web.search({ query: 'anonymous' })).resolves.toEqual({ sources: [], truncated: false })
+    await ctx.credentials.set(ref, 'CUSTOM_KEY')
+    await expect(ctx.web.search({ query: 'placeholder' })).rejects.toThrow(
+      'AnySearch search credential is a placeholder; remove it for anonymous access or configure a valid API key',
+    )
     await ctx.credentials.set(ref, 'as_sk_first')
     await expect(ctx.web.search({ query: 'q' })).resolves.toEqual({ sources: [], truncated: false })
     await ctx.credentials.set(ref, 'as_sk_rotated')
