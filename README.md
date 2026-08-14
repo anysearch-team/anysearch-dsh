@@ -1,8 +1,8 @@
 <div align="center">
-  <a href="https://anysearch.com"><img src="https://anysearch.com/favicon.ico" alt="AnySearch logo" width="96" height="96"></a>
+  <a href="https://anysearch.com"><img src="docs/assets/anysearch-logo.svg" alt="AnySearch logo" width="96" height="96"></a>
   <h1>@anysearch/anysearch-dsh</h1>
   <p>Official AnySearch web search plugin for DeepSeek Harness.</p>
-  <p><a href="https://www.npmjs.com/package/@anysearch/anysearch-dsh"><img src="https://img.shields.io/npm/v/%40anysearch%2Fanysearch-dsh?logo=npm" alt="npm version"></a> <a href="https://www.npmjs.com/package/@anysearch/anysearch-dsh"><img src="https://img.shields.io/npm/dm/%40anysearch%2Fanysearch-dsh?logo=npm" alt="npm downloads"></a> <a href="https://github.com/anysearch-team/anysearch-dsh/actions/workflows/ci.yml"><img src="https://github.com/anysearch-team/anysearch-dsh/workflows/CI/badge.svg" alt="CI status"></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license"></a> <a href="https://github.com/deepseek-ai/deepseek-harness"><img src="https://img.shields.io/badge/DeepSeek-Harness-4F46E5" alt="DeepSeek Harness plugin"></a></p>
+  <p><a href="https://www.npmjs.com/package/@anysearch/anysearch-dsh"><img src="https://img.shields.io/npm/v/%40anysearch%2Fanysearch-dsh?logo=npm" alt="npm version"></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license"></a> <a href="https://github.com/deepseek-ai/deepseek-harness"><img src="https://img.shields.io/badge/DeepSeek-Harness-4F46E5" alt="DeepSeek Harness plugin"></a></p>
   <p><strong>English</strong> | <a href="README.zh-CN.md">简体中文</a></p>
 </div>
 
