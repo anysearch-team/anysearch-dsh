@@ -348,7 +348,7 @@ describe('AnySearch plugin registration', () => {
   it('keeps only the credential reference in the bundle patch', async () => {
     const patch = await readFile(new URL('../cordis.patch.yml', import.meta.url), 'utf8')
 
-    expect(patch).toContain("name: '@anysearch/dsh'")
+    expect(patch).toContain("name: '@anysearch/anysearch-dsh'")
     expect(patch).toContain('apiKeyEnv: ANYSEARCH_API_KEY')
     expect(patch).not.toContain('process.env.ANYSEARCH_API_KEY')
   })

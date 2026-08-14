@@ -2,13 +2,13 @@
 
 [English](../README.md) | **简体中文**
 
-适用版本：`@anysearch/dsh 0.1.0`
+适用版本：`@anysearch/anysearch-dsh 0.1.0`
 
 最后核对：2026-08-14
 
 ## 这是什么
 
-`@anysearch/dsh` 是 AnySearch 面向 DeepSeek Harness 的搜索插件。安装后，DeepSeek Harness 内置的 `web_search` 工具会使用 AnySearch 完成实时网页搜索。
+`@anysearch/anysearch-dsh` 是 AnySearch 面向 DeepSeek Harness 的搜索插件。安装后，DeepSeek Harness 内置的 `web_search` 工具会使用 AnySearch 完成实时网页搜索。
 
 你不需要让模型学习一个新的普通搜索工具，也不需要单独配置 MCP Server。Agent 仍然调用 Harness 原生的 `web_search`，插件负责把请求发送到 AnySearch，并将结果转换为 Harness 可以展示和引用的来源。
 
@@ -53,7 +53,7 @@ DeepSeek Harness 当前仍处于开发预览阶段。Harness 发布不兼容变�
 将 npm 包安装到 DeepSeek Harness 的 `web` profile：
 
 ```bash
-npx -y @deepseek-ai/dsh plugin --profile web add @anysearch/dsh
+npx -y @deepseek-ai/dsh plugin --profile web add @anysearch/anysearch-dsh
 ```
 
 这一步会向 `web` profile 添加插件，并把 AnySearch 选为该 profile 的搜索 Provider。
@@ -179,7 +179,7 @@ npx -y @deepseek-ai/dsh --profile web --dump-config
 
 ```yaml
 - id: web-search-anysearch
-  name: '@anysearch/dsh'
+  name: '@anysearch/anysearch-dsh'
 ```
 
 然后启动 profile，提出一个明确需要联网搜索的问题。如果 Provider 未注册，Harness 会报告配置的搜索 Provider 缺失；如果 AnySearch 返回错误，工具会显示 AnySearch 的安全错误消息或 HTTP 状态说明。

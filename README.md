@@ -1,12 +1,12 @@
 <div align="center">
   <a href="https://anysearch.com"><img src="https://anysearch.com/favicon.ico" alt="AnySearch logo" width="96" height="96"></a>
-  <h1>@anysearch/dsh</h1>
+  <h1>@anysearch/anysearch-dsh</h1>
   <p>Official AnySearch web search plugin for DeepSeek Harness.</p>
-  <p><a href="https://www.npmjs.com/package/@anysearch/dsh"><img src="https://img.shields.io/npm/v/%40anysearch%2Fdsh?logo=npm" alt="npm version"></a> <a href="https://www.npmjs.com/package/@anysearch/dsh"><img src="https://img.shields.io/npm/dm/%40anysearch%2Fdsh?logo=npm" alt="npm downloads"></a> <a href="https://github.com/anysearch-team/anysearch-dsh/actions/workflows/ci.yml"><img src="https://github.com/anysearch-team/anysearch-dsh/workflows/CI/badge.svg" alt="CI status"></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license"></a> <a href="https://github.com/deepseek-ai/deepseek-harness"><img src="https://img.shields.io/badge/DeepSeek-Harness-4F46E5" alt="DeepSeek Harness plugin"></a></p>
+  <p><a href="https://www.npmjs.com/package/@anysearch/anysearch-dsh"><img src="https://img.shields.io/npm/v/%40anysearch%2Fanysearch-dsh?logo=npm" alt="npm version"></a> <a href="https://www.npmjs.com/package/@anysearch/anysearch-dsh"><img src="https://img.shields.io/npm/dm/%40anysearch%2Fanysearch-dsh?logo=npm" alt="npm downloads"></a> <a href="https://github.com/anysearch-team/anysearch-dsh/actions/workflows/ci.yml"><img src="https://github.com/anysearch-team/anysearch-dsh/workflows/CI/badge.svg" alt="CI status"></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license"></a> <a href="https://github.com/deepseek-ai/deepseek-harness"><img src="https://img.shields.io/badge/DeepSeek-Harness-4F46E5" alt="DeepSeek Harness plugin"></a></p>
   <p><strong>English</strong> | <a href="README.zh-CN.md">简体中文</a></p>
 </div>
 
-`@anysearch/dsh` connects [AnySearch](https://anysearch.com) to [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness). It powers Harness's native `web_search` and adds capability discovery, vertical search, and bounded batch search.
+`@anysearch/anysearch-dsh` connects [AnySearch](https://anysearch.com) to [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness). It powers Harness's native `web_search` and adds capability discovery, vertical search, and bounded batch search.
 
 ## Quick start
 
@@ -15,7 +15,7 @@ Requires Node.js 22.19 or Node.js 24+, pnpm 11.7, and DeepSeek Harness. The DSH 
 Install the plugin into the `web` profile:
 
 ```sh
-npx -y @deepseek-ai/dsh plugin --profile web add @anysearch/dsh
+npx -y @deepseek-ai/dsh plugin --profile web add @anysearch/anysearch-dsh
 ```
 
 Start DeepSeek Harness:
@@ -85,13 +85,13 @@ The bundled profile layer selects AnySearch as the existing `ctx.web` provider a
 Update:
 
 ```sh
-npx -y @deepseek-ai/dsh plugin --profile web update @anysearch/dsh
+npx -y @deepseek-ai/dsh plugin --profile web update @anysearch/anysearch-dsh
 ```
 
 Remove:
 
 ```sh
-npx -y @deepseek-ai/dsh plugin --profile web remove @anysearch/dsh
+npx -y @deepseek-ai/dsh plugin --profile web remove @anysearch/anysearch-dsh
 ```
 
 ## Compatibility and limitations

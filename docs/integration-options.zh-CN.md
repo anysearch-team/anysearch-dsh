@@ -6,12 +6,12 @@
 
 这四种方式调用的是同一个 AnySearch 产品能力，但解决的问题不同：
 
-- 使用 DeepSeek Harness，希望安装后直接替换内置 `web_search`：选择 `@anysearch/dsh`。
+- 使用 DeepSeek Harness，希望安装后直接替换内置 `web_search`：选择 `@anysearch/anysearch-dsh`。
 - 使用支持 Skill 的 Agent，希望用一组跨平台命令获得 AnySearch 全部工具：选择 AnySearch Skill。
 - 客户端原生支持 MCP，希望自动发现并调用完整工具集：直接连接 AnySearch MCP。
 - 开发自己的应用或 Agent，需要完全控制请求字段、结构化响应和产品 UI：直接调用 AnySearch HTTP API。
 
-`@anysearch/dsh` 不是另一套搜索后端，也不会改变 AnySearch 的搜索数据源。对于相同 API Key、相同 `/v1/search` 参数和相同服务状态，搜索计算仍由 AnySearch 完成。差异主要来自客户端如何选择工具、开放哪些字段、如何处理返回结果，以及如何执行批量搜索和 Extract。
+`@anysearch/anysearch-dsh` 不是另一套搜索后端，也不会改变 AnySearch 的搜索数据源。对于相同 API Key、相同 `/v1/search` 参数和相同服务状态，搜索计算仍由 AnySearch 完成。差异主要来自客户端如何选择工具、开放哪些字段、如何处理返回结果，以及如何执行批量搜索和 Extract。
 
 ## 总览
 
@@ -39,7 +39,7 @@
 
 ### 它做什么
 
-`@anysearch/dsh` 把 AnySearch 注册为 DeepSeek Harness 的 Web Search Provider。模型仍调用 Harness 内置：
+`@anysearch/anysearch-dsh` 把 AnySearch 注册为 DeepSeek Harness 的 Web Search Provider。模型仍调用 Harness 内置：
 
 ```text
 web_search

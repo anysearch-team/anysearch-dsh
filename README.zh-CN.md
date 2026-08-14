@@ -1,12 +1,12 @@
 <div align="center">
   <a href="https://anysearch.com"><img src="https://anysearch.com/favicon.ico" alt="AnySearch Logo" width="96" height="96"></a>
-  <h1>@anysearch/dsh</h1>
+  <h1>@anysearch/anysearch-dsh</h1>
   <p>AnySearch 面向 DeepSeek Harness 的官方网页搜索插件。</p>
-  <p><a href="https://www.npmjs.com/package/@anysearch/dsh"><img src="https://img.shields.io/npm/v/%40anysearch%2Fdsh?logo=npm" alt="npm 版本"></a> <a href="https://www.npmjs.com/package/@anysearch/dsh"><img src="https://img.shields.io/npm/dm/%40anysearch%2Fdsh?logo=npm" alt="npm 下载量"></a> <a href="https://github.com/anysearch-team/anysearch-dsh/actions/workflows/ci.yml"><img src="https://github.com/anysearch-team/anysearch-dsh/workflows/CI/badge.svg" alt="CI 状态"></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT 许可证"></a> <a href="https://github.com/deepseek-ai/deepseek-harness"><img src="https://img.shields.io/badge/DeepSeek-Harness-4F46E5" alt="DeepSeek Harness 插件"></a></p>
+  <p><a href="https://www.npmjs.com/package/@anysearch/anysearch-dsh"><img src="https://img.shields.io/npm/v/%40anysearch%2Fanysearch-dsh?logo=npm" alt="npm 版本"></a> <a href="https://www.npmjs.com/package/@anysearch/anysearch-dsh"><img src="https://img.shields.io/npm/dm/%40anysearch%2Fanysearch-dsh?logo=npm" alt="npm 下载量"></a> <a href="https://github.com/anysearch-team/anysearch-dsh/actions/workflows/ci.yml"><img src="https://github.com/anysearch-team/anysearch-dsh/workflows/CI/badge.svg" alt="CI 状态"></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT 许可证"></a> <a href="https://github.com/deepseek-ai/deepseek-harness"><img src="https://img.shields.io/badge/DeepSeek-Harness-4F46E5" alt="DeepSeek Harness 插件"></a></p>
   <p><a href="README.md">English</a> | <strong>简体中文</strong></p>
 </div>
 
-`@anysearch/dsh` 将 [AnySearch](https://anysearch.com) 接入 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)。它既能驱动 Harness 原生的 `web_search`，也提供能力发现、垂直搜索和有界批量搜索。
+`@anysearch/anysearch-dsh` 将 [AnySearch](https://anysearch.com) 接入 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)。它既能驱动 Harness 原生的 `web_search`，也提供能力发现、垂直搜索和有界批量搜索。
 
 ## 快速开始
 
@@ -15,7 +15,7 @@
 将插件安装到 `web` profile：
 
 ```sh
-npx -y @deepseek-ai/dsh plugin --profile web add @anysearch/dsh
+npx -y @deepseek-ai/dsh plugin --profile web add @anysearch/anysearch-dsh
 ```
 
 启动 DeepSeek Harness：
@@ -85,13 +85,13 @@ npx -y @deepseek-ai/dsh --profile web --dump-config
 更新：
 
 ```sh
-npx -y @deepseek-ai/dsh plugin --profile web update @anysearch/dsh
+npx -y @deepseek-ai/dsh plugin --profile web update @anysearch/anysearch-dsh
 ```
 
 移除：
 
 ```sh
-npx -y @deepseek-ai/dsh plugin --profile web remove @anysearch/dsh
+npx -y @deepseek-ai/dsh plugin --profile web remove @anysearch/anysearch-dsh
 ```
 
 ## 兼容性与限制
