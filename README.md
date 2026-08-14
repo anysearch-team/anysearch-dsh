@@ -10,6 +10,16 @@
 
 ## Quick start
 
+### For AI Agents
+
+Fetch the complete installation guide, read it end to end, and then follow it step by step:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/anysearch-team/anysearch-dsh/refs/heads/main/docs/agent-installation.md
+```
+
+### For Humans
+
 Requires Node.js 22.19 or Node.js 24+, pnpm 11.7, and DeepSeek Harness. The DSH plugin command uses pnpm to manage profile dependencies, so `pnpm` must be available on `PATH`.
 
 Windows, Linux, and macOS use the same installation command. Before installing, ensure that Node.js, `npx`, and `pnpm` can all be run directly from `PATH`.

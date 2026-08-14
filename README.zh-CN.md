@@ -10,6 +10,16 @@
 
 ## 快速开始
 
+### 面向 AI Agent
+
+获取完整安装指南，通读全文，然后严格按步骤执行：
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/anysearch-team/anysearch-dsh/refs/heads/main/docs/agent-installation.md
+```
+
+### 面向人类
+
 需要 Node.js 22.19 或 Node.js 24+、pnpm 11.7 和 DeepSeek Harness。DSH 插件命令使用 pnpm 管理 profile 依赖，因此 `pnpm` 必须位于 `PATH` 中。
 
 Windows、Linux 和 macOS 使用相同的安装命令。安装前请确保 Node.js、`npx` 和 `pnpm` 均可从 `PATH` 直接运行。
