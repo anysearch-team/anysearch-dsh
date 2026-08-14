@@ -6,7 +6,7 @@
 
 | 组件 | 版本 |
 |---|---|
-| `anysearch-dsh` | `0.1.0` |
+| `anysearch-dsh` | `0.1.1` |
 | `@deepseek-ai/dsh` | `0.1.0-rc.6` |
 | Node.js | `22.19+` 或 `24+` |
 

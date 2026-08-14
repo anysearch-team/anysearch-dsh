@@ -33,7 +33,7 @@
 | 跨 Agent/客户端复用 | 限于 DSH | 较好 | 支持 MCP 的客户端 | 取决于自研封装 |
 | 协议层 | HTTP `/v1/search` 和能力目录 | 当前 CLI 包装 `/mcp` JSON-RPC | Streamable HTTP MCP | 普通 HTTP JSON |
 
-表中的 DSH 插件能力以当前 `0.1.0` 和公开文档为准。
+表中的 DSH 插件能力以当前 `0.1.1` 和公开文档为准。
 
 ## 一、DSH 插件
 

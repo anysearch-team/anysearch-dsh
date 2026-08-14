@@ -1,6 +1,6 @@
 {
   "name": "@anysearch/anysearch-dsh",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "AnySearch web search provider and advanced tools for DeepSeek Harness",
   "keywords": [
     "anysearch",

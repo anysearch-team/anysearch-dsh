@@ -2,7 +2,7 @@
 
 [English](../README.md) | **简体中文**
 
-适用版本：`@anysearch/anysearch-dsh 0.1.0`
+适用版本：`@anysearch/anysearch-dsh 0.1.1`
 
 最后核对：2026-08-14
 
@@ -16,7 +16,7 @@
 
 ## 当前版本支持什么
 
-`0.1.0` 当前支持：
+`0.1.1` 当前支持：
 
 - 使用 AnySearch 执行通用网页搜索；
 - 将查询词和结果数量发送到 `POST /v1/search`；
