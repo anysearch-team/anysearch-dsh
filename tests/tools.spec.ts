@@ -18,6 +18,7 @@ import {
 } from '../src/index.ts'
 import * as anySearchPlugin from '../src/index.ts'
 import { parseAdvancedSearchArgs } from '../src/tools/search.ts'
+import { ANYSEARCH_TOOL_TIMEOUT_MS } from '../src/limits.ts'
 
 const signal = new AbortController().signal
 
@@ -201,7 +202,7 @@ describe('anysearch_capabilities', () => {
 })
 
 describe('anysearch_search', () => {
-  it('returns full canonical content while rendering a concise source list by default', async () => {
+  it('omits unrequested canonical content while rendering a concise source list', async () => {
     const fetchMock = vi.fn(async () => jsonResponse({
       code: 0,
       message: 'success',
@@ -236,7 +237,6 @@ describe('anysearch_search', () => {
         title: 'AAPL',
         url: 'https://finance.test/aapl',
         snippet: 'Latest quote',
-        content: 'FULL_CONTENT_MUST_STAY_CANONICAL',
       }],
       metadata: { totalResults: 1, searchTimeMs: 25 },
       renderedContentTruncated: false,
@@ -268,7 +268,7 @@ describe('anysearch_search', () => {
     await fiber.dispose()
   })
 
-  it('caps only rendered content and keeps the canonical value complete', async () => {
+  it('caps rendered content independently of the larger canonical budget', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => jsonResponse({
       code: 0,
       message: 'success',
@@ -383,6 +383,9 @@ describe('AnySearch tool registration', () => {
     expect(ctx.tools.get(ANYSEARCH_CAPABILITIES_TOOL_NAME)).toBeDefined()
     expect(ctx.tools.get(ANYSEARCH_BATCH_SEARCH_TOOL_NAME)).toBeDefined()
     expect(ctx.tools.get(ANYSEARCH_SEARCH_TOOL_NAME)).toBeDefined()
+    expect(ctx.tools.get(ANYSEARCH_CAPABILITIES_TOOL_NAME)?.timeoutMs).toBe(ANYSEARCH_TOOL_TIMEOUT_MS)
+    expect(ctx.tools.get(ANYSEARCH_BATCH_SEARCH_TOOL_NAME)?.timeoutMs).toBe(ANYSEARCH_TOOL_TIMEOUT_MS)
+    expect(ctx.tools.get(ANYSEARCH_SEARCH_TOOL_NAME)?.timeoutMs).toBe(ANYSEARCH_TOOL_TIMEOUT_MS)
     const prompt = await ctx.systemPrompt.assemble()
     const names = prompt.tools.map(tool => tool.name)
     expect(names).toContain(ANYSEARCH_CAPABILITIES_TOOL_NAME)

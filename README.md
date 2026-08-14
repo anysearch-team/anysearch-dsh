@@ -32,8 +32,8 @@ No API key is required for a quick start. Requests use AnySearch's anonymous quo
 - Live capability and vertical-search discovery.
 - Advanced search with tags, parameters, region, and language.
 - Concurrent batches of one to five searches with partial-failure handling.
-- Optional cleaned page content with a bounded rendering budget.
-- Caller cancellation, response validation, and redirect-safe credential handling.
+- Optional cleaned page content with a 200,000-character canonical response cap and a configurable rendering budget.
+- Caller cancellation, a 55-second HTTP deadline, 60-second advanced-tool budgets, response validation, and redirect-safe credential handling.
 
 ## Optional API key
 

@@ -15,6 +15,7 @@ import type {
   AnySearchSearchRequest,
   AnySearchSearchResponse,
 } from '../types.ts'
+import { ANYSEARCH_TOOL_TIMEOUT_MS } from '../limits.ts'
 
 /** Stable model-facing name for full AnySearch search requests. */
 export const ANYSEARCH_SEARCH_TOOL_NAME = 'anysearch_search'
@@ -89,7 +90,7 @@ export function parseAdvancedSearchArgs(args: {
   }
 }
 
-/** Format one advanced result for the model without changing its canonical value. */
+/** Format one bounded canonical result for the model. */
 export function formatAdvancedSearchOutput(
   result: AnySearchSearchResponse & { renderedContentTruncated: boolean },
   includeContent: boolean,
@@ -133,6 +134,7 @@ export function registerAdvancedSearchTool(
 ): void {
   ctx.tools.register(defineTool({
     name: ANYSEARCH_SEARCH_TOOL_NAME,
+    timeoutMs: ANYSEARCH_TOOL_TIMEOUT_MS,
     description: 'Run an AnySearch vertical or metadata-preserving search. Use web_search for ordinary queries. Call anysearch_capabilities before supplying tag or params.',
     parameters: {
       query: { type: 'string', required: true, description: 'Search query.' },
@@ -162,17 +164,27 @@ export function registerAdvancedSearchTool(
     async execute(args, exec) {
       const parsed = parseAdvancedSearchArgs(args)
       const result = await client.search(parsed.request, exec.signal)
+      const results = canonicalSearchResults(result.results, parsed.includeContent)
       return {
         ...result.requestId === undefined ? {} : { requestId: result.requestId },
-        results: result.results,
+        results,
         metadata: result.metadata,
         renderedContentTruncated: parsed.includeContent
-          && totalContentCharacters(result) > maxRenderedContentChars,
+          && totalContentCharacters({ ...result, results }) > maxRenderedContentChars,
       }
     },
     presentCall: presentSearchCall,
     presentResult: (args, result) => presentSearchResult(args, result),
   }))
+}
+
+/** Retain cleaned content only when the caller explicitly requested it. */
+export function canonicalSearchResults(
+  results: AnySearchSearchResponse['results'],
+  includeContent: boolean,
+): AnySearchSearchResponse['results'] {
+  if (includeContent) return results
+  return results.map(({ content: _content, ...result }) => result)
 }
 
 function optionalNonBlank(value: string | undefined, name: string): string | undefined {

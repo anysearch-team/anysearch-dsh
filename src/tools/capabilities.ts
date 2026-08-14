@@ -5,6 +5,7 @@ import { defineTool } from '@deepseek-ai/dsh-tools'
 import type { GenericCallView } from '@deepseek-ai/dsh-tools'
 import type { AnySearchClient } from '../client.ts'
 import type { AnySearchDomainsResponse, AnySearchSubDomainsResponse } from '../types.ts'
+import { ANYSEARCH_TOOL_TIMEOUT_MS } from '../limits.ts'
 
 /** Stable model-facing name for dynamic AnySearch capability discovery. */
 export const ANYSEARCH_CAPABILITIES_TOOL_NAME = 'anysearch_capabilities'
@@ -122,6 +123,7 @@ export function formatSubDomains(result: AnySearchSubDomainsResponse): string {
 export function registerCapabilitiesTool(ctx: Context, client: AnySearchClient): void {
   ctx.tools.register(defineTool({
     name: ANYSEARCH_CAPABILITIES_TOOL_NAME,
+    timeoutMs: ANYSEARCH_TOOL_TIMEOUT_MS,
     description: 'Discover current AnySearch domains, vertical tags, and parameter definitions. Call without domains for the top-level catalog, then with up to five selected domains before using a vertical tag.',
     parameters: {
       domains: {

@@ -6,7 +6,8 @@ import type { GenericCallView, JsonValue } from '@deepseek-ai/dsh-tools'
 import { AnySearchClientError } from '../client.ts'
 import type { AnySearchClient } from '../client.ts'
 import type { AnySearchMetadata, AnySearchResult, AnySearchSearchRequest } from '../types.ts'
-import { parseAdvancedSearchArgs } from './search.ts'
+import { ANYSEARCH_TOOL_TIMEOUT_MS } from '../limits.ts'
+import { canonicalSearchResults, parseAdvancedSearchArgs } from './search.ts'
 
 /** Stable model-facing name for bounded client-side search fanout. */
 export const ANYSEARCH_BATCH_SEARCH_TOOL_NAME = 'anysearch_batch_search'
@@ -222,7 +223,7 @@ export async function executeBatchSearch(
         query: item.request.query,
         ok: true,
         ...response.requestId === undefined ? {} : { requestId: response.requestId },
-        results: response.results,
+        results: canonicalSearchResults(response.results, item.includeContent),
         metadata: response.metadata,
       }
     } catch (error: unknown) {
@@ -251,6 +252,7 @@ export function registerBatchSearchTool(
 ): void {
   ctx.tools.register(defineTool({
     name: ANYSEARCH_BATCH_SEARCH_TOOL_NAME,
+    timeoutMs: ANYSEARCH_TOOL_TIMEOUT_MS,
     description: 'Run one to five independent AnySearch searches concurrently. Results stay in input order and an item failure does not discard other results.',
     parameters: {
       items: {

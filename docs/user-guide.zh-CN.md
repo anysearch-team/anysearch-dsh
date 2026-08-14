@@ -27,12 +27,13 @@
 - 通过 `anysearch_search` 使用 `tag`、`params`、`zone` 和 `language`；
 - 通过 `anysearch_batch_search` 并发执行一至五个完整搜索项；
 - 按输入顺序返回批量结果，并保留单项失败；
-- 在高级搜索结果中保留请求 ID、耗时和完整清洗正文；
+- 在高级搜索结果中保留请求 ID、耗时和有界清洗正文；
 - 按需向模型展示有字符上限的清洗正文；
 - 通过 DeepSeek Harness 的凭据系统解析 `ANYSEARCH_API_KEY`；
 - 在受管凭据文件中轮换 Key 后，下一次搜索自动使用新值；
 - 未配置 API Key 时使用 AnySearch 匿名额度；
 - 在 Agent 取消操作时中止正在进行的搜索；
+- 为 HTTP 请求设置 55 秒 deadline，并为三个 AnySearch 高级工具声明 60 秒预算；
 - 拒绝把查询或凭据转发到 HTTP 重定向目标。
 
 当前版本尚未开放：
@@ -202,7 +203,7 @@ https://api.anysearch.com
     maxRenderedContentChars: 12000
 ```
 
-`apiKeyEnv` 是 DSH 凭据引用，不是 Key 字面量。`baseURL` 必须是 HTTP 或 HTTPS 地址。`maxRenderedContentChars` 限制一次高级工具调用进入模型的正文，不裁剪结构化返回值。
+`apiKeyEnv` 是 DSH 凭据引用，不是 Key 字面量。`baseURL` 必须是 HTTP 或 HTTPS 地址。`maxRenderedContentChars` 只限制一次高级工具调用进入模型的正文；结构化结果另有固定的单次搜索累计 200,000 字符正文上限。
 
 ## 结果如何进入模型
 
@@ -214,9 +215,11 @@ AnySearch 搜索响应可能包含标题、URL、摘要和清洗正文。当前 
 
 完整 `content` 不会进入 `web_search` 结果。这保持了 Harness 通用 Provider 的字段一致性。
 
-`anysearch_search` 会在结构化结果中保留完整 `content`、请求 ID 和搜索耗时。传入 `includeContent: true` 时，模型文本会展示最多 `maxRenderedContentChars` 个正文字符。
+`anysearch_search` 始终保留请求 ID 和搜索耗时。只有传入 `includeContent: true` 时，结构化结果才保留 `content`；单次搜索所有结果的 `content` 累计最多 200,000 字符，模型文本再展示其中最多 `maxRenderedContentChars` 个字符。未传入 `includeContent` 或传入 `false` 时，结构化结果不持久化正文。
 
-`anysearch_batch_search` 对每项保留相同字段。正文上限由整批共享，不是每项各有一份上限。
+`anysearch_batch_search` 对每项应用相同的结构化正文规则。200,000 字符上限按每个独立搜索请求计算；`maxRenderedContentChars` 展示上限由整批共享，不是每项各有一份。
+
+上游业务错误文本会保留至多 2,000 字符，并以 JSON 字符串形式转义，前面固定标记为不可信上游数据而非指令。HTTP 状态、请求 ID 和重试等待时间仍作为安全诊断字段保留。
 
 批量搜索发出多次独立 HTTP 请求。每项单独鉴权、限流和计费；单项失败不会丢弃其他成功项。
 
