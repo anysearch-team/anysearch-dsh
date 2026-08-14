@@ -35,13 +35,15 @@
     "lib/**/*.d.ts",
     "cordis.patch.yml",
     "docs/**/*.md",
+    "docs/assets/**/*",
     "README.md",
     "README.zh-CN.md",
     "LICENSE"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "check": "tsc -p tsconfig.test.json && vitest run && tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.test.json && vitest run && tsc -p tsconfig.json && node scripts/check-package.mjs",
+    "check:package": "tsc -p tsconfig.json && node scripts/check-package.mjs",
     "prepare": "tsc -p tsconfig.json",
     "test": "vitest run",
     "test:e2e": "tsc -p tsconfig.json && node scripts/live-e2e.mjs",

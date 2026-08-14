@@ -213,11 +213,26 @@ try {
       'an authenticated operation omitted Authorization')
     await ctx.credentials.unset(keyRef)
     const anonymousRequestIndex = observedRequests.length
-    const anonymousResult = await ctx.web.search({ query: 'anonymous quota smoke', maxResults: 1 })
-    assert.ok(anonymousResult.sources.length > 0, 'credential removal did not fall back to anonymous search')
+    let anonymousResult
+    let anonymousError
+    try {
+      anonymousResult = await ctx.web.search({ query: 'anonymous quota smoke', maxResults: 1 })
+    } catch (error) {
+      anonymousError = error
+    } finally {
+      await ctx.credentials.set(keyRef, apiKey)
+    }
     assert.equal(observedRequests[anonymousRequestIndex]?.authenticated, false,
       'credential removal did not remove Authorization from the next operation')
-    await ctx.credentials.set(keyRef, apiKey)
+    if (anonymousError === undefined) {
+      assert.ok(anonymousResult.sources.length > 0,
+        'credential removal did not fall back to anonymous search')
+    } else {
+      assert.equal(anonymousError.cause?.authentication, 'anonymous',
+        'credential removal failed with a non-anonymous error')
+      assert.equal(anonymousError.cause?.httpStatus, 402,
+        'credential removal hit an unexpected anonymous API error')
+    }
   } else {
     assert.ok(observedRequests.every(request => !request.authenticated),
       'anonymous-only E2E unexpectedly sent Authorization')
