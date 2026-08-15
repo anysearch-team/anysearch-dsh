@@ -1,7 +1,7 @@
 <div align="center">
   <a href="https://anysearch.com"><img src="docs/assets/anysearch-logo.svg" alt="AnySearch Logo" width="96" height="96"></a>
   <h1>@anysearch/anysearch-dsh</h1>
-  <p>AnySearch 面向 DeepSeek Harness 的官方网页搜索插件。</p>
+  <p>由 AnySearch 驱动，为 DeepSeek Harness 提供实时网页搜索与高级检索能力。</p>
   <p><a href="https://anysearch.com"><img src="https://img.shields.io/badge/AnySearch-AI_Search-485DC9.svg?logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGcgY2xpcC1wYXRoPSJ1cmwoI2NsaXAwXzQ4NzZfNzgwKSI+CjxwYXRoIGQ9Ik02IDguNUgzLjVWMy41SDguNVY2SDExVjFIMVYxMUg2VjguNVoiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0xMSA4LjVIOC41VjExSDExVjguNVoiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik02IDguNUgzLjVWMTFINlY4LjVaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMy41IDFIMVYzLjVIMy41VjFaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNOC41IDFIMy41VjMuNUg4LjVWMVoiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0xMSAxSDguNVYzLjVIMTFWMVoiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0xMSAzLjVIOC41VjZIMTFWMy41WiIgZmlsbD0id2hpdGUiLz4KPC9nPgo8ZGVmcz4KPGNsaXBQYXRoIGlkPSJjbGlwMF80ODc2Xzc4MCI+CjxyZWN0IHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCIgZmlsbD0id2hpdGUiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDEgMSkiLz4KPC9jbGlwUGF0aD4KPC9kZWZzPgo8L3N2Zz4K" alt="AnySearch AI Search"></a> <a href="https://www.npmjs.com/package/@anysearch/anysearch-dsh"><img src="https://img.shields.io/npm/v/%40anysearch%2Fanysearch-dsh?logo=npm" alt="npm 版本"></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT 许可证"></a> <a href="https://github.com/deepseek-ai/deepseek-harness"><img src="https://img.shields.io/badge/DeepSeek-Harness-4F46E5" alt="DeepSeek Harness 插件"></a></p>
   <p><a href="README.md">English</a> | <strong>简体中文</strong></p>
 </div>
@@ -40,17 +40,17 @@ npx -y @deepseek-ai/dsh web
 ## 提供什么
 
 - 通过 Harness 内置的 `web_search` 返回 AnySearch 搜索结果。
-- 实时发现可用领域和垂直搜索能力。
-- 使用标签、参数、地区和语言执行高级搜索。
-- 并发执行一至五个搜索，并保留单项失败。
-- 按需提供清洗后的网页正文；单次搜索的结构化正文累计不超过 200,000 字符，并另行限制向模型展示的字符数。
-- 支持调用方取消、55 秒 HTTP deadline、60 秒高级工具预算、响应校验和不会向重定向目标泄露凭据的安全策略。
+- 返回包含标题、摘要和 URL 的实时来源，便于引用。
+- 实时发现可搜索领域、垂直分类和支持的参数。
+- 使用标签、地区、语言和结构化参数执行高级搜索。
+- 并发执行一至五个搜索，并在单项失败时保留其他成功结果。
+- 按需提供清洗后的网页正文，支持更深入的研究任务。
 
 ## 可选 API Key
 
-插件可以使用 AnySearch 匿名额度，无需 API Key。需要账号级额度时，将凭据写入 `$DSH_HOME/.credentials.yaml`，默认位置是 `~/.dsh/.credentials.yaml`：
+无需 API Key 即可立即体验：插件默认使用 AnySearch 匿名额度。如需持续使用，建议注册 AnySearch 账号并配置 API Key，以使用账号级额度并获得更高的调用上限。
 
-还没有 API Key？访问 [anysearch.com](https://anysearch.com) 注册并登录，然后前往 [API Keys](https://www.anysearch.com/console/api-keys) 获取。
+访问 [anysearch.com](https://anysearch.com) 注册并登录，然后前往 [API Keys](https://www.anysearch.com/console/api-keys) 获取。获取后，将凭据写入 `$DSH_HOME/.credentials.yaml`，默认位置是 `~/.dsh/.credentials.yaml`：
 
 ```yaml
 ANYSEARCH_API_KEY: "as_sk_your_key"
