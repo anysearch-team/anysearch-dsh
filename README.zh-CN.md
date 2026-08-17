@@ -21,10 +21,6 @@ curl -fsSL https://raw.githubusercontent.com/anysearch-team/anysearch-dsh/refs/h
 
 ### 面向人类
 
-需要 Node.js 22.19 或 Node.js 24+、pnpm 11.7 和 DeepSeek Harness。DSH 插件命令使用 pnpm 管理 profile 依赖，因此 `pnpm` 必须位于 `PATH` 中。
-
-Windows、Linux 和 macOS 使用相同的安装命令。安装前请确保 Node.js、`npx` 和 `pnpm` 均可从 `PATH` 直接运行。
-
 将插件安装到 `web` profile：
 
 ```sh
@@ -48,7 +44,9 @@ npx -y @deepseek-ai/dsh web
 
 ## 可选 API Key
 
-无需 API Key 即可体验。注册 AnySearch 账号并配置 API Key 后，可获得每天 1000 次免费搜索调用额度。
+无需 API Key 即可体验。
+
+注册 AnySearch 账号并配置 API Key 后，可获得每天 1000 次免费搜索调用额度。
 
 访问 [anysearch.com](https://anysearch.com) 注册并登录，然后前往 [API Keys](https://www.anysearch.com/console/api-keys) 获取。获取后，将凭据写入 `$DSH_HOME/.credentials.yaml`，默认位置是 `~/.dsh/.credentials.yaml`：
 
@@ -74,6 +72,12 @@ npx -y @deepseek-ai/dsh --profile web --dump-config
 | 一次执行一至五个搜索 | `anysearch_batch_search` |
 
 对于普通提示词，让 Harness 自动选择工具即可。模型可以先读取实时领域和参数定义，再执行专门搜索。
+
+## 环境依赖
+
+需要 Node.js 22.19 或 Node.js 24+、pnpm 11.7 和 DeepSeek Harness。DSH 插件命令使用 pnpm 管理 profile 依赖，因此 `pnpm` 必须位于 `PATH` 中。
+
+Windows、Linux 和 macOS 使用相同的安装命令。安装前请确保 Node.js、`npx` 和 `pnpm` 均可从 `PATH` 直接运行。
 
 ## 配置
 

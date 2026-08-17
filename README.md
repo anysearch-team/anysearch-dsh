@@ -21,10 +21,6 @@ curl -fsSL https://raw.githubusercontent.com/anysearch-team/anysearch-dsh/refs/h
 
 ### For Humans
 
-Requires Node.js 22.19 or Node.js 24+, pnpm 11.7, and DeepSeek Harness. The DSH plugin command uses pnpm to manage profile dependencies, so `pnpm` must be available on `PATH`.
-
-Windows, Linux, and macOS use the same installation command. Before installing, ensure that Node.js, `npx`, and `pnpm` can all be run directly from `PATH`.
-
 Install the plugin into the `web` profile:
 
 ```sh
@@ -48,7 +44,9 @@ No API key is required for a quick start. Requests use AnySearch's anonymous quo
 
 ## Optional API key
 
-Try it without an API key. Sign up for an AnySearch account and configure an API key to get 1,000 free search calls per day.
+Try it without an API key.
+
+Sign up for an AnySearch account and configure an API key to get 1,000 free search calls per day.
 
 Sign up or sign in at [anysearch.com](https://anysearch.com), then visit [API Keys](https://www.anysearch.com/console/api-keys) to get one. Store the key in `$DSH_HOME/.credentials.yaml` (`~/.dsh/.credentials.yaml` by default):
 
@@ -74,6 +72,12 @@ npx -y @deepseek-ai/dsh --profile web --dump-config
 | Run one to five searches together | `anysearch_batch_search` |
 
 For ordinary prompts, let Harness select the tool. Models can discover live domain and parameter definitions before making a specialized search.
+
+## Environment requirements
+
+Requires Node.js 22.19 or Node.js 24+, pnpm 11.7, and DeepSeek Harness. The DSH plugin command uses pnpm to manage profile dependencies, so `pnpm` must be available on `PATH`.
+
+Windows, Linux, and macOS use the same installation command. Before installing, ensure that Node.js, `npx`, and `pnpm` can all be run directly from `PATH`.
 
 ## Configuration
 
