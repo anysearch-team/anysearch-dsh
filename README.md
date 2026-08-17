@@ -1,12 +1,14 @@
 <div align="center">
   <a href="https://anysearch.com"><img src="docs/assets/anysearch-logo.svg" alt="AnySearch logo" width="96" height="96"></a>
   <h1>@anysearch/anysearch-dsh</h1>
-  <p>AnySearch-powered real-time web search and advanced discovery for DeepSeek Harness.</p>
+  <p>AnySearch-powered real-time web and vertical search for DeepSeek Harness.</p>
   <p><a href="https://anysearch.com"><img src="https://img.shields.io/badge/AnySearch-AI_Search-485DC9.svg?logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iMTIiIHZpZXdCb3g9IjAgMCAxMiAxMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGcgY2xpcC1wYXRoPSJ1cmwoI2NsaXAwXzQ4NzZfNzgwKSI+CjxwYXRoIGQ9Ik02IDguNUgzLjVWMy41SDguNVY2SDExVjFIMVYxMUg2VjguNVoiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0xMSA4LjVIOC41VjExSDExVjguNVoiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik02IDguNUgzLjVWMTFINlY4LjVaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMy41IDFIMVYzLjVIMy41VjFaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNOC41IDFIMy41VjMuNUg4LjVWMVoiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0xMSAxSDguNVYzLjVIMTFWMVoiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0xMSAzLjVIOC41VjZIMTFWMy41WiIgZmlsbD0id2hpdGUiLz4KPC9nPgo8ZGVmcz4KPGNsaXBQYXRoIGlkPSJjbGlwMF80ODc2Xzc4MCI+CjxyZWN0IHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCIgZmlsbD0id2hpdGUiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDEgMSkiLz4KPC9jbGlwUGF0aD4KPC9kZWZzPgo8L3N2Zz4K" alt="AnySearch AI Search"></a> <a href="https://www.npmjs.com/package/@anysearch/anysearch-dsh"><img src="https://img.shields.io/npm/v/%40anysearch%2Fanysearch-dsh?logo=npm" alt="npm version"></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license"></a> <a href="https://github.com/deepseek-ai/deepseek-harness"><img src="https://img.shields.io/badge/DeepSeek-Harness-4F46E5" alt="DeepSeek Harness plugin"></a></p>
   <p><strong>English</strong> | <a href="README.zh-CN.md">简体中文</a></p>
 </div>
 
-`@anysearch/anysearch-dsh` connects [AnySearch](https://anysearch.com) to [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness). It powers Harness's native `web_search` and adds capability discovery, vertical search, and bounded batch search.
+`@anysearch/anysearch-dsh` connects [AnySearch](https://anysearch.com) to [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) as a plugin. Keep using Harness's native `web_search` while gaining real-time web search, vertical search, and concurrent batch search.
+
+AnySearch is search infrastructure for AI agents, covering the public web and specialized data sources across code, finance, academia, law, security, and more.
 
 ## Quick start
 
@@ -39,16 +41,14 @@ No API key is required for a quick start. Requests use AnySearch's anonymous quo
 
 ## What you get
 
-- AnySearch-powered results through Harness's built-in `web_search`.
-- Fresh sources with titles, snippets, and URLs ready for citation.
-- Live discovery of searchable domains, verticals, and supported parameters.
-- Advanced search across tags, regions, languages, and structured parameters.
-- Concurrent batches of one to five searches, with successful results preserved when individual searches fail.
-- Optional cleaned page content for deeper research workflows.
+- Through Harness's built-in `web_search`, AnySearch returns results with titles, snippets, and URLs for easy citation.
+- Discover searchable domains, vertical categories, and supported parameters in real time, then run advanced searches using tags, regions, languages, and structured parameters.
+- Run one to five searches concurrently; an individual failure does not affect the other results.
+- Advanced search can return cleaned page content on demand for deeper research.
 
 ## Optional API key
 
-You can start immediately without an API key: the plugin uses AnySearch's anonymous quota by default. For regular use, we recommend creating an AnySearch account and configuring an API key to use account-level quota and higher request limits.
+Try it without an API key. Sign up for an AnySearch account and configure an API key to get 1,000 free search calls per day.
 
 Sign up or sign in at [anysearch.com](https://anysearch.com), then visit [API Keys](https://www.anysearch.com/console/api-keys) to get one. Store the key in `$DSH_HOME/.credentials.yaml` (`~/.dsh/.credentials.yaml` by default):
 
@@ -112,13 +112,30 @@ npx -y @deepseek-ai/dsh plugin --profile web remove @anysearch/anysearch-dsh
 ## Compatibility and limitations
 
 - DeepSeek Harness is in developer preview and may make compatibility-breaking changes.
-- This plugin currently does not provide `anysearch_extract`.
+- This plugin currently does not provide `anysearch_extract`. For full-page extraction, use [AnySearch MCP](https://anysearch.com/docs).
 - Configure the API key through DSH-managed credentials or an environment variable; the DSH settings page does not currently provide a third-party Provider credential field.
 
 ## Documentation
 
 - [Chinese user guide](docs/user-guide.zh-CN.md)
 - [DSH plugin, Skill, MCP, and HTTP integration comparison](docs/integration-options.zh-CN.md)
+
+## Community & Support
+
+Join the AnySearch community to share your experience, report issues, and get technical support.
+
+- [GitHub Issues](https://github.com/anysearch-team/anysearch-dsh/issues): submit bug reports and usage feedback.
+- WeChat Group: scan the QR code below and complete the group survey; staff will invite you after review.
+- [Discord Community](https://discord.gg/3WAmxyuBSc): scan the QR code or follow the link to join directly.
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center"><strong>WeChat group survey</strong><br><img src="docs/assets/wechat-community-qr.jpg" alt="WeChat group survey QR code" width="180"></td>
+      <td align="center"><strong>Discord invite</strong><br><img src="docs/assets/discord-community-qr.png" alt="Discord invite QR code" width="180"></td>
+    </tr>
+  </table>
+</div>
 
 ## Development
 
