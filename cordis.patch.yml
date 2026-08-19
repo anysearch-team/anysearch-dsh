@@ -1,6 +1,11 @@
 - id: web
   config:
     searchProvider: anysearch
+    fetchProvider: anysearch
+
+- id: tool-web
+  config:
+    fetch: true
 
 - insert:
     - id: web-search-anysearch

@@ -2,26 +2,29 @@
 
 [English](../README.md) | **简体中文**
 
-适用版本：`@anysearch/anysearch-dsh 0.1.1`
+适用版本：包含 AnySearch Fetch Provider 的待发布版本
 
-最后核对：2026-08-14
+最后核对：2026-08-17
 
 ## 这是什么
 
-`@anysearch/anysearch-dsh` 是 AnySearch 面向 DeepSeek Harness 的搜索插件。安装后，DeepSeek Harness 内置的 `web_search` 工具会使用 AnySearch 完成实时网页搜索。
+`@anysearch/anysearch-dsh` 是 AnySearch 面向 DeepSeek Harness 的 Web 插件。安装后，DeepSeek Harness 内置的 `web_search` 会使用 AnySearch 完成实时网页搜索，`web_fetch` 会使用 AnySearch Extract 抓取并清洗指定 URL。
 
-你不需要让模型学习一个新的普通搜索工具，也不需要单独配置 MCP Server。Agent 仍然调用 Harness 原生的 `web_search`，插件负责把请求发送到 AnySearch，并将结果转换为 Harness 可以展示和引用的来源。
+你不需要让模型学习新的普通搜索或抓取工具，也不需要单独配置 MCP Server。Agent 仍然调用 Harness 原生的 `web_search` 和 `web_fetch`，插件负责把请求发送到 AnySearch，并将结果转换为 Harness 的通用结果。
 
 项目地址：<https://github.com/anysearch-team/anysearch-dsh>
 
 ## 当前版本支持什么
 
-`0.1.1` 当前支持：
+当前源码支持：
 
 - 使用 AnySearch 执行通用网页搜索；
 - 将查询词和结果数量发送到 `POST /v1/search`；
 - 返回标题、URL 和摘要；
 - 使用 Harness 原生 `web_search` 展示和引用搜索来源；
+- 将目标 URL 发送到 `POST /v1/extract`；
+- 使用 Harness 原生 `web_fetch` 返回最终 URL、源站 HTTP 状态和清洗后的正文；
+- 将 AnySearch 已转换的 Markdown/文本作为 `text` 返回，避免 Harness 再次执行 HTML 转换；
 - 通过 `anysearch_capabilities` 获取动态领域、标签和参数定义；
 - 在两级能力目录结果中向模型保留请求 ID；
 - 通过 `anysearch_search` 使用 `tag`、`params`、`zone` 和 `language`；
@@ -32,13 +35,9 @@
 - 通过 DeepSeek Harness 的凭据系统解析 `ANYSEARCH_API_KEY`；
 - 在受管凭据文件中轮换 Key 后，下一次搜索自动使用新值；
 - 未配置 API Key 时使用 AnySearch 匿名额度；
-- 在 Agent 取消操作时中止正在进行的搜索；
+- 在 Agent 取消操作时中止正在进行的搜索或抓取；
 - 为 HTTP 请求设置 55 秒 deadline，并为三个 AnySearch 高级工具声明 60 秒预算；
 - 拒绝把查询或凭据转发到 HTTP 重定向目标。
-
-当前版本尚未开放：
-
-- 网页正文提取；
 
 ## 环境要求
 
@@ -57,7 +56,7 @@ DeepSeek Harness 当前仍处于开发预览阶段。Harness 发布不兼容变�
 npx -y @deepseek-ai/dsh plugin --profile web add @anysearch/anysearch-dsh
 ```
 
-这一步会向 `web` profile 添加插件，并把 AnySearch 选为该 profile 的搜索 Provider。
+这一步会向 `web` profile 添加插件，把 AnySearch 选为该 profile 的搜索和抓取 Provider，并启用原生 `web_fetch`。
 
 然后启动 DeepSeek Harness：
 
@@ -117,7 +116,7 @@ npx -y @deepseek-ai/dsh --profile web
 
 ## 开始使用
 
-安装完成后，像平时一样向 DeepSeek Harness 提问。普通联网查询继续调用 `web_search`。
+安装完成后，像平时一样向 DeepSeek Harness 提问。普通联网查询继续调用 `web_search`；需要读取某个确定 URL 的正文时调用 `web_fetch`。
 
 例如：
 
@@ -133,10 +132,11 @@ npx -y @deepseek-ai/dsh --profile web
 核实某个 GitHub 项目当前的安装方式，并引用官方文档。
 ```
 
-插件共提供四个模型可见搜索入口：
+插件共提供五个模型可见入口：
 
 ```text
 web_search
+web_fetch
 anysearch_capabilities
 anysearch_search
 anysearch_batch_search
@@ -174,6 +174,7 @@ npx -y @deepseek-ai/dsh --profile web --dump-config
 - id: web
   config:
     searchProvider: anysearch
+    fetchProvider: anysearch
 ```
 
 以及 AnySearch 插件行：
@@ -183,7 +184,7 @@ npx -y @deepseek-ai/dsh --profile web --dump-config
   name: '@anysearch/anysearch-dsh'
 ```
 
-然后启动 profile，提出一个明确需要联网搜索的问题。如果 Provider 未注册，Harness 会报告配置的搜索 Provider 缺失；如果 AnySearch 返回错误，工具会显示 AnySearch 的安全错误消息或 HTTP 状态说明。
+还应确认 `tool-web` 配置包含 `fetch: true`。然后启动 profile，分别提出需要联网搜索和读取确定 URL 的问题。如果 Provider 未注册，Harness 会报告配置的对应 Provider 缺失；如果 AnySearch 返回错误，工具会显示安全错误消息或 HTTP 状态说明。
 
 ## 自定义 API 地址
 
@@ -219,11 +220,13 @@ AnySearch 搜索响应可能包含标题、URL、摘要和清洗正文。当前 
 
 `anysearch_batch_search` 对每项应用相同的结构化正文规则。200,000 字符上限按每个独立搜索请求计算；`maxRenderedContentChars` 展示上限由整批共享，不是每项各有一份。
 
+`web_fetch` 调用 AnySearch `/v1/extract`。AnySearch 返回的 HTML 页面已经转换为可读 Markdown，插件把它作为 DSH `text` 正文返回，并保留最终 URL、源站 2xx 状态和 `truncated`。`web_fetch` 使用 DSH 通用结果，因此不会向模型暴露 AnySearch `request_id`、原始媒体类型或标题。
+
 上游业务错误文本会保留至多 2,000 字符，并以 JSON 字符串形式转义，前面固定标记为不可信上游数据而非指令。HTTP 状态、请求 ID 和重试等待时间仍作为安全诊断字段保留。
 
 批量搜索发出多次独立 HTTP 请求。每项单独鉴权、限流和计费；单项失败不会丢弃其他成功项。
 
-本插件当前不提供 AnySearch Extract 工具。
+插件不注册重复的 `anysearch_extract` 工具；AnySearch Extract 通过 Harness 原生 `web_fetch` 提供。
 
 ## 常见问题
 
@@ -241,7 +244,7 @@ AnySearch 搜索响应可能包含标题、URL、摘要和清洗正文。当前 
 
 ### 普通查询应该使用哪个工具？
 
-普通查询使用 `web_search`。只有垂直标签、结构化参数或完整元数据有价值时，才使用 `anysearch_search`。
+普通查询使用 `web_search`。需要读取一个确定 URL 的正文时使用 `web_fetch`。只有垂直标签、结构化参数或完整搜索元数据有价值时，才使用 `anysearch_search`。
 
 ### 当前可以使用垂直搜索吗？
 
@@ -253,7 +256,7 @@ AnySearch 搜索响应可能包含标题、URL、摘要和清洗正文。当前 
 
 ### 当前可以提取完整网页吗？
 
-插件当前不提供 AnySearch Extract。AnySearch MCP 提供 `extract` 工具；HTTP 调用方式以 AnySearch 公开 API 文档为准。
+可以。调用 Harness 原生 `web_fetch` 并传入一个公开 HTTP(S) URL；插件会通过 AnySearch HTTP Extract 返回清洗正文。该入口只接受 URL，不提供格式、提示词或 LLM 摘要参数。
 
 ### 为什么搜索结果和直接调用 HTTP 的 JSON 不完全相同？
 

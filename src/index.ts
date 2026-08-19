@@ -10,6 +10,7 @@ import {
   AnySearchClient,
 } from './client.ts'
 import { AnySearchProvider } from './provider.ts'
+import { AnySearchFetchProvider } from './fetch-provider.ts'
 import { registerCapabilitiesTool } from './tools/capabilities.ts'
 import { registerBatchSearchTool } from './tools/batch.ts'
 import {
@@ -36,6 +37,11 @@ export {
   mapAnySearchResponse,
   mapAnySearchResult,
 } from './provider.ts'
+export {
+  ANYSEARCH_FETCH_PROVIDER_ID,
+  AnySearchFetchProvider,
+  mapAnySearchExtractResponse,
+} from './fetch-provider.ts'
 export {
   ANYSEARCH_BATCH_SEARCH_TOOL_NAME,
   executeBatchSearch,
@@ -67,6 +73,8 @@ export type {
   AnySearchDomainCapability,
   AnySearchDomainsResponse,
   AnySearchDomainSummary,
+  AnySearchExtractRequest,
+  AnySearchExtractResponse,
   AnySearchMetadata,
   AnySearchParamInfo,
   AnySearchParamValue,
@@ -147,6 +155,7 @@ export function apply(ctx: Context, config: Config): void {
     baseURL: resolved.baseURL,
   })
   ctx.web.registerSearchProvider(new AnySearchProvider(client))
+  ctx.web.registerFetchProvider(new AnySearchFetchProvider(client))
   registerCapabilitiesTool(ctx, client)
   registerBatchSearchTool(ctx, client, resolved.maxRenderedContentChars)
   registerAdvancedSearchTool(

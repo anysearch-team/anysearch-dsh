@@ -37,6 +37,26 @@ function searchEnvelope(): unknown {
   }
 }
 
+function extractEnvelope(): unknown {
+  return {
+    code: 0,
+    message: 'success',
+    request_id: 'req_extract',
+    data: {
+      url: 'https://example.test/article',
+      normalized_url: 'https://example.test/article',
+      effective_url: 'https://www.example.test/article',
+      title: 'Example article',
+      content: '# Example article\n\nCleaned body.',
+      content_type: 'text/html',
+      source_http_status: 200,
+      truncated: false,
+      returned_characters: 32,
+      content_trust: 'external_untrusted',
+    },
+  }
+}
+
 afterEach(() => {
   vi.useRealTimers()
   vi.unstubAllGlobals()
@@ -129,6 +149,69 @@ describe('AnySearchClient search', () => {
     expect(result.results[1]?.content).toBe('bc')
     expect(result.results.reduce((total, item) => total + (item.content?.length ?? 0), 0))
       .toBe(MAX_CANONICAL_CONTENT_CHARS)
+  })
+})
+
+describe('AnySearchClient extract', () => {
+  it('sends one URL and returns the validated Extract response', async () => {
+    const fetchMock = vi.fn(async () => jsonResponse(extractEnvelope()))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(new AnySearchClient(options).extract({
+      url: 'https://example.test/article',
+    })).resolves.toEqual({
+      requestId: 'req_extract',
+      url: 'https://example.test/article',
+      normalizedUrl: 'https://example.test/article',
+      effectiveUrl: 'https://www.example.test/article',
+      title: 'Example article',
+      content: '# Example article\n\nCleaned body.',
+      contentType: 'text/html',
+      sourceHttpStatus: 200,
+      truncated: false,
+      returnedCharacters: 32,
+      contentTrust: 'external_untrusted',
+    })
+
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
+    expect(url).toBe('https://api.anysearch.test/root/v1/extract')
+    expect(init).toMatchObject({ method: 'POST', redirect: 'error' })
+    expect(init.headers).toMatchObject({
+      authorization: 'Bearer as_sk_test',
+      'content-type': 'application/json',
+      'x-anysearch-client': ANYSEARCH_DSH_CLIENT_ID,
+    })
+    expect(JSON.parse(init.body as string)).toEqual({ url: 'https://example.test/article' })
+  })
+
+  it.each([
+    {
+      name: 'trust marker',
+      mutate: (data: Record<string, unknown>) => { data.content_trust = 'trusted' },
+      message: 'data.content_trust must be external_untrusted',
+    },
+    {
+      name: 'character count',
+      mutate: (data: Record<string, unknown>) => { data.returned_characters = 31 },
+      message: 'data.returned_characters must equal the content character count (32)',
+    },
+    {
+      name: 'effective URL',
+      mutate: (data: Record<string, unknown>) => { data.effective_url = 'file:///private' },
+      message: 'data.effective_url must be an absolute HTTP(S) URL',
+    },
+    {
+      name: 'source status',
+      mutate: (data: Record<string, unknown>) => { data.source_http_status = 404 },
+      message: 'data.source_http_status must be an integer from 200 through 299',
+    },
+  ])('rejects an invalid Extract $name', async ({ mutate, message }) => {
+    const envelope = extractEnvelope() as { data: Record<string, unknown> }
+    mutate(envelope.data)
+    vi.stubGlobal('fetch', vi.fn(async () => jsonResponse(envelope)))
+
+    await expect(new AnySearchClient(options).extract({ url: 'https://example.test/article' }))
+      .rejects.toThrow(message)
   })
 })
 
@@ -242,6 +325,23 @@ describe('AnySearchClient failures', () => {
         authentication: 'credential',
         requestId: 'req_limited',
         retryAfter: '8',
+      })
+  })
+
+  it('preserves the stable Extract error code for provider translation', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => jsonResponse({
+      code: -1,
+      message: 'Target is blocked by Extract policy.',
+      request_id: 'req_blocked',
+      error_code: 'extract_target_blocked',
+    }, { status: 403 })))
+
+    await expect(new AnySearchClient(options).extract({ url: 'http://127.0.0.1/private' }))
+      .rejects.toMatchObject({
+        operation: 'extract',
+        httpStatus: 403,
+        requestId: 'req_blocked',
+        errorCode: 'extract_target_blocked',
       })
   })
 

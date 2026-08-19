@@ -32,6 +32,26 @@ export interface AnySearchSearchResponse {
   metadata: AnySearchMetadata
 }
 
+/** Extract request accepted by the shared AnySearch HTTP client. */
+export interface AnySearchExtractRequest {
+  url: string
+}
+
+/** Validated content returned by the AnySearch Extract HTTP API. */
+export interface AnySearchExtractResponse {
+  requestId?: string
+  url: string
+  normalizedUrl: string
+  effectiveUrl: string
+  title?: string
+  content: string
+  contentType: string
+  sourceHttpStatus: number
+  truncated: boolean
+  returnedCharacters: number
+  contentTrust: 'external_untrusted'
+}
+
 /** One top-level search domain returned by the dynamic capability catalog. */
 export interface AnySearchDomainSummary {
   domain: string

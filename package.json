@@ -1,12 +1,13 @@
 {
   "name": "@anysearch/anysearch-dsh",
-  "version": "0.1.1",
-  "description": "AnySearch web search provider and advanced tools for DeepSeek Harness",
+  "version": "0.1.2",
+  "description": "AnySearch web search and fetch providers plus advanced tools for DeepSeek Harness",
   "keywords": [
     "anysearch",
     "deepseek-harness",
     "dsh-plugin",
-    "web-search"
+    "web-search",
+    "web-fetch"
   ],
   "homepage": "https://github.com/anysearch-team/anysearch-dsh#readme",
   "bugs": {

@@ -6,7 +6,7 @@
   <p><strong>English</strong> | <a href="README.zh-CN.md">简体中文</a></p>
 </div>
 
-`@anysearch/anysearch-dsh` connects [AnySearch](https://anysearch.com) to [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) as a plugin. Keep using Harness's native `web_search` while gaining real-time web search, vertical search, and concurrent batch search.
+`@anysearch/anysearch-dsh` connects [AnySearch](https://anysearch.com) to [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) as a plugin. Keep using Harness's native `web_search` and `web_fetch` while gaining real-time web search, cleaned URL content, vertical search, and concurrent batch search.
 
 AnySearch is search infrastructure for AI agents, covering the public web and specialized data sources across code, finance, academia, law, security, and more.
 
@@ -38,6 +38,7 @@ No API key is required for a quick start. Requests use AnySearch's anonymous quo
 ## What you get
 
 - Through Harness's built-in `web_search`, AnySearch returns results with titles, snippets, and URLs for easy citation.
+- Through Harness's built-in `web_fetch`, AnySearch Extract retrieves and cleans the content of a specific public HTTP(S) URL.
 - Discover searchable domains, vertical categories, and supported parameters in real time, then run advanced searches using tags, regions, languages, and structured parameters.
 - Run one to five searches concurrently; an individual failure does not affect the other results.
 - Advanced search can return cleaned page content on demand for deeper research.
@@ -67,6 +68,7 @@ npx -y @deepseek-ai/dsh --profile web --dump-config
 | Use case | Harness tool |
 |---|---|
 | Ordinary web search | `web_search` |
+| Fetch and clean a specific URL | `web_fetch` |
 | Discover available domains and tags | `anysearch_capabilities` |
 | Vertical or parameterized search | `anysearch_search` |
 | Run one to five searches together | `anysearch_batch_search` |
@@ -81,7 +83,7 @@ Windows, Linux, and macOS use the same installation command. Before installing, 
 
 ## Configuration
 
-The bundled profile layer automatically selects AnySearch as the existing `ctx.web` provider and mounts the advanced tools, so no changes are required by default.
+The bundled profile layer automatically selects AnySearch as the existing `ctx.web` search and fetch provider, enables `web_fetch`, and mounts the advanced tools, so no changes are required by default.
 
 To customize it, ask an AI assistant—or edit it manually—to add the complete block below to the target DSH profile's user configuration layer, overriding the bundled `id: web-search-anysearch` entry. Keep the `id` unchanged, replace the complete `config`, and do not add a second AnySearch provider under a different ID:
 
@@ -116,7 +118,7 @@ npx -y @deepseek-ai/dsh plugin --profile web remove @anysearch/anysearch-dsh
 ## Compatibility and limitations
 
 - DeepSeek Harness is in developer preview and may make compatibility-breaking changes.
-- This plugin currently does not provide `anysearch_extract`. For full-page extraction, use [AnySearch MCP](https://anysearch.com/docs).
+- URL extraction is exposed through Harness's provider-neutral `web_fetch`; the plugin does not add a duplicate `anysearch_extract` tool.
 - Configure the API key through DSH-managed credentials or an environment variable; the DSH settings page does not currently provide a third-party Provider credential field.
 
 ## Documentation

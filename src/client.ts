@@ -4,6 +4,8 @@ import type {
   AnySearchDomainCapability,
   AnySearchDomainsResponse,
   AnySearchDomainSummary,
+  AnySearchExtractRequest,
+  AnySearchExtractResponse,
   AnySearchParamInfo,
   AnySearchResult,
   AnySearchSearchRequest,
@@ -29,7 +31,7 @@ const API_KEY_PLACEHOLDERS = new Set([
 ])
 
 /** AnySearch operation names retained in safe diagnostics. */
-export type AnySearchOperation = 'search' | 'domains' | 'sub_domains'
+export type AnySearchOperation = 'search' | 'extract' | 'domains' | 'sub_domains'
 
 /** Resolved AnySearch client configuration. */
 export interface AnySearchClientOptions {
@@ -55,6 +57,8 @@ export class AnySearchClientError extends Error {
   readonly requestId?: string
   /** Upstream retry delay retained for diagnostics; the client never retries. */
   readonly retryAfter?: string
+  /** Stable AnySearch business error code when the response supplied one. */
+  readonly errorCode?: string
 
   constructor(
     message: string,
@@ -65,6 +69,7 @@ export class AnySearchClientError extends Error {
       authentication?: 'anonymous' | 'credential'
       requestId?: string
       retryAfter?: string
+      errorCode?: string
       cause?: unknown
     },
   ) {
@@ -76,6 +81,7 @@ export class AnySearchClientError extends Error {
     if (options.authentication !== undefined) this.authentication = options.authentication
     if (options.requestId !== undefined) this.requestId = options.requestId
     if (options.retryAfter !== undefined) this.retryAfter = options.retryAfter
+    if (options.errorCode !== undefined) this.errorCode = options.errorCode
   }
 }
 
@@ -107,6 +113,15 @@ export class AnySearchClient {
       }),
     }, signal)
     return parseOperationData('search', envelope, parseSearchData)
+  }
+
+  /** Extract and validate the cleaned content of one public HTTP(S) URL. */
+  async extract(request: AnySearchExtractRequest, signal?: AbortSignal): Promise<AnySearchExtractResponse> {
+    const envelope = await this.request('/v1/extract', 'extract', {
+      method: 'POST',
+      body: JSON.stringify({ url: request.url }),
+    }, signal)
+    return parseOperationData('extract', envelope, parseExtractData)
   }
 
   /** List all top-level domains in the dynamic capability catalog. */
@@ -203,9 +218,18 @@ export class AnySearchClient {
     }
 
     const diagnosticRequestId = optionalStringField(value, 'request_id')
+    const diagnosticErrorCode = optionalStringField(value, 'error_code')
     if (!response.ok) {
       const message = messageField(value) ?? 'API error'
-      throw upstreamError(operation, message, response.status, authentication, diagnosticRequestId, retryAfter)
+      throw upstreamError(
+        operation,
+        message,
+        response.status,
+        authentication,
+        diagnosticRequestId,
+        retryAfter,
+        diagnosticErrorCode,
+      )
     }
 
     try {
@@ -221,6 +245,7 @@ export class AnySearchClient {
           authentication,
           requestId,
           retryAfter,
+          optionalStringRecordField(envelope, 'error_code', 'error_code'),
         )
       }
       return {
@@ -320,6 +345,41 @@ function parseSearchData(envelope: EnvelopeData): AnySearchSearchResponse {
   }
 }
 
+function parseExtractData(envelope: EnvelopeData): AnySearchExtractResponse {
+  const data = envelope.data
+  const url = absoluteHTTPURLField(data, 'url', 'data.url')
+  const normalizedUrl = absoluteHTTPURLField(data, 'normalized_url', 'data.normalized_url')
+  const effectiveUrl = absoluteHTTPURLField(data, 'effective_url', 'data.effective_url')
+  const title = optionalStringRecordField(data, 'title', 'data.title')
+  const content = stringField(data, 'content', 'data.content')
+  const contentType = stringField(data, 'content_type', 'data.content_type')
+  if (contentType.trim().length === 0) throw new TypeError('data.content_type must not be empty')
+  const sourceHttpStatus = integerInRangeField(data, 'source_http_status', 'data.source_http_status', 200, 299)
+  const truncated = booleanField(data, 'truncated', 'data.truncated')
+  const returnedCharacters = nonNegativeIntegerField(data, 'returned_characters', 'data.returned_characters')
+  const actualCharacters = [...content].length
+  if (returnedCharacters !== actualCharacters) {
+    throw new TypeError(`data.returned_characters must equal the content character count (${actualCharacters})`)
+  }
+  const contentTrust = stringField(data, 'content_trust', 'data.content_trust')
+  if (contentTrust !== 'external_untrusted') {
+    throw new TypeError('data.content_trust must be external_untrusted')
+  }
+  return {
+    ...envelope.requestId === undefined ? {} : { requestId: envelope.requestId },
+    url,
+    normalizedUrl,
+    effectiveUrl,
+    ...title === undefined ? {} : { title },
+    content,
+    contentType,
+    sourceHttpStatus,
+    truncated,
+    returnedCharacters,
+    contentTrust,
+  }
+}
+
 function parseSearchResult(value: unknown, index: number): AnySearchResult {
   const path = `data.results[${index}]`
   const result = record(value, path)
@@ -414,6 +474,20 @@ function stringField(value: Record<string, unknown>, key: string, path: string):
   return field
 }
 
+function absoluteHTTPURLField(value: Record<string, unknown>, key: string, path: string): string {
+  const field = stringField(value, key, path)
+  let url: URL
+  try {
+    url = new URL(field)
+  } catch {
+    throw new TypeError(`${path} must be an absolute HTTP(S) URL`)
+  }
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    throw new TypeError(`${path} must be an absolute HTTP(S) URL`)
+  }
+  return field
+}
+
 function optionalStringRecordField(value: Record<string, unknown>, key: string, path: string): string | undefined {
   const field = value[key]
   if (field === undefined) return undefined
@@ -447,6 +521,20 @@ function nonNegativeIntegerField(value: Record<string, unknown>, key: string, pa
   return field
 }
 
+function integerInRangeField(
+  value: Record<string, unknown>,
+  key: string,
+  path: string,
+  minimum: number,
+  maximum: number,
+): number {
+  const field = value[key]
+  if (!Number.isSafeInteger(field) || (field as number) < minimum || (field as number) > maximum) {
+    throw new TypeError(`${path} must be an integer from ${minimum} through ${maximum}`)
+  }
+  return field as number
+}
+
 function booleanField(value: Record<string, unknown>, key: string, path: string): boolean {
   const field = value[key]
   if (typeof field !== 'boolean') throw new TypeError(`${path} must be a boolean`)
@@ -466,6 +554,7 @@ function upstreamError(
   authentication: 'anonymous' | 'credential',
   requestId?: string,
   retryAfter?: string,
+  errorCode?: string,
 ): AnySearchClientError {
   const facts = [
     `HTTP ${httpStatus}`,
@@ -481,6 +570,7 @@ function upstreamError(
       authentication,
       ...requestId === undefined ? {} : { requestId },
       ...retryAfter === undefined ? {} : { retryAfter },
+      ...errorCode === undefined ? {} : { errorCode },
     },
   )
 }
