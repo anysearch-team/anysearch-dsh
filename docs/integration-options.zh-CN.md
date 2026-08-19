@@ -1,12 +1,12 @@
 # AnySearch DSH 插件与 Skill、MCP、HTTP 接入方式对比
 
-最后核对：2026-08-14
+最后核对：2026-08-17
 
 ## 先说结论
 
 这四种方式调用的是同一个 AnySearch 产品能力，但解决的问题不同：
 
-- 使用 DeepSeek Harness，希望安装后直接替换内置 `web_search`：选择 `@anysearch/anysearch-dsh`。
+- 使用 DeepSeek Harness，希望安装后直接接管内置 `web_search` 和 `web_fetch`：选择 `@anysearch/anysearch-dsh`。
 - 使用支持 Skill 的 Agent，希望用一组跨平台命令获得 AnySearch 全部工具：选择 AnySearch Skill。
 - 客户端原生支持 MCP，希望自动发现并调用完整工具集：直接连接 AnySearch MCP。
 - 开发自己的应用或 Agent，需要完全控制请求字段、结构化响应和产品 UI：直接调用 AnySearch HTTP API。
@@ -22,7 +22,7 @@
 | 当前通用搜索 | 支持 | 支持 | 支持 | 支持 |
 | 当前垂直搜索 | 支持 | 支持 | 支持 | 支持 |
 | 当前批量搜索 | 支持；客户端最多五路并发 | 支持 | 支持 | 客户端自行并发 |
-| 当前 Extract | 不支持 | 支持 | 支持 | 以公开 HTTP API 文档为准 |
+| 当前 Extract | 支持；通过原生 `web_fetch` | 支持 | 支持 | `POST /v1/extract` |
 | 能力发现 | `anysearch_capabilities` | `get_sub_domains` 命令 | `get_sub_domains` 工具 | `/v1/domains`、`/v1/sub-domains` |
 | 返回形式 | 原生来源或结构化工具结果 | CLI 文本 | MCP tool result | 结构化 JSON |
 | Harness 原生 UI | 最好 | 作为外部命令输出 | 取决于 MCP Host | 需要自行实现 |
@@ -31,18 +31,19 @@
 | 自定义请求控制 | 支持当前搜索字段 | 由 Skill CLI 参数决定 | 由 MCP schema 决定 | 最高 |
 | 安装复杂度 | DSH 内安装一次 | 安装 Skill 和运行时 | 配置远程 MCP | 编写客户端代码 |
 | 跨 Agent/客户端复用 | 限于 DSH | 较好 | 支持 MCP 的客户端 | 取决于自研封装 |
-| 协议层 | HTTP `/v1/search` 和能力目录 | 当前 CLI 包装 `/mcp` JSON-RPC | Streamable HTTP MCP | 普通 HTTP JSON |
+| 协议层 | HTTP `/v1/search`、`/v1/extract` 和能力目录 | 当前 CLI 包装 `/mcp` JSON-RPC | Streamable HTTP MCP | 普通 HTTP JSON |
 
-表中的 DSH 插件能力以当前 `0.1.1` 和公开文档为准。
+表中的 DSH 插件能力以包含 AnySearch Fetch Provider 的待发布源码和公开 HTTP Extract 契约为准。
 
 ## 一、DSH 插件
 
 ### 它做什么
 
-`@anysearch/anysearch-dsh` 把 AnySearch 注册为 DeepSeek Harness 的 Web Search Provider。模型仍调用 Harness 内置：
+`@anysearch/anysearch-dsh` 把 AnySearch 注册为 DeepSeek Harness 的 Web Search Provider 和 Web Fetch Provider。模型仍调用 Harness 内置：
 
 ```text
 web_search
+web_fetch
 ```
 
 普通搜索把请求转换为：
@@ -53,30 +54,37 @@ POST https://api.anysearch.com/v1/search
 
 并把 AnySearch 的标题、链接和摘要转换为 Harness 标准来源。
 
+指定 URL 抓取转换为：
+
+```http
+POST https://api.anysearch.com/v1/extract
+```
+
+AnySearch 返回的清洗正文映射为 Harness 通用 Fetch 文本，同时保留最终 URL、源站 HTTP 状态和截断标记。
+
 专业检索先使用 `anysearch_capabilities` 获取实时标签，再使用 `anysearch_search` 发送完整字段。高级工具保留请求 ID、耗时和清洗正文。
 
 ### 优点
 
 - 与 Harness Provider 选择、工具 schema、引用输出和 UI 原生集成；
-- 普通搜索不增加第二个工具，模型选择更简单；
+- 搜索和抓取都复用 Harness 原生工具，不增加重复的 AnySearch 工具；
 - 用户不需要维护 MCP Server 配置或 Skill 运行命令；
 - 插件配置只保存 `ANYSEARCH_API_KEY` 引用，真实值由 DSH credentials Provider 解析；
 - 每次操作重新解析一次凭据，受管文件中的 Key 轮换在下一次调用生效；
 - 请求取消、错误和插件生命周期遵循 Harness 机制；
-- 已提供 AnySearch 专属结构化工具，同时保留默认 `web_search`。
+- 已提供 AnySearch 专属结构化搜索工具，同时保留默认 `web_search` 和 `web_fetch`。
 
 ### 当前限制
 
 - 通用 `web_search` 仍只开放 `query` 和结果数量；
 - 清洗正文和完整元数据需要使用 `anysearch_search`；
-- 没有 Extract；
 - 当前 DSH Web 设置页不会自动为第三方 Provider 生成 AnySearch Key 输入框，需要使用 DSH 受管凭据文件或环境变量；
 - 只适用于 DeepSeek Harness。
 
 ### 适合谁
 
 - 已使用 DeepSeek Harness；
-- 希望 AnySearch 成为默认搜索 Provider；
+- 希望 AnySearch 成为默认搜索和抓取 Provider；
 - 更看重原生工具体验、展示和引用；
 - 可以接受高级能力分阶段发布。
 
@@ -173,6 +181,7 @@ https://api.anysearch.com/mcp
 
 ```text
 POST /v1/search
+POST /v1/extract
 GET  /v1/domains
 GET  /v1/sub-domains
 ```
@@ -189,7 +198,7 @@ language
 format
 ```
 
-是否提供 HTTP Extract 以及具体调用方式，以 AnySearch 公开 HTTP API 文档为准。
+`POST /v1/extract` 接收 `{ "url": "https://example.com" }`，返回清洗正文、最终 URL、源站状态、截断标记和 `content_trust`。
 
 ### 优点
 
@@ -234,7 +243,7 @@ MCP 和 Skill 先调用 `get_sub_domains`。DSH 插件使用 `anysearch_capabili
 
 ### 结果适配不同
 
-直接 HTTP 可以读取完整 JSON；MCP 和 Skill 通常返回格式化文本。DSH 的 `web_search` 只保留通用来源，`anysearch_search` 则保留完整结构化结果。
+直接 HTTP 可以读取完整 JSON；MCP 和 Skill 通常返回格式化文本。DSH 的 `web_search` 只保留通用来源，`anysearch_search` 保留完整结构化搜索结果，`web_fetch` 则把 Extract 清洗正文映射为 Harness 通用 Fetch 结果。
 
 ### Batch 语义不同
 
@@ -242,7 +251,7 @@ MCP `batch_search` 在服务端统一处理多个子查询。DSH 的 `anysearch_
 
 ### Extract 可用性不同
 
-Extract 当前可通过 MCP 使用；DSH 插件和直接 HTTP 客户端应以公开 HTTP API 文档列出的端点为准。
+Extract 可通过 MCP、直接 HTTP `POST /v1/extract` 和 DSH 原生 `web_fetch` 使用。DSH 插件不额外注册 `anysearch_extract`，因此模型侧仍只有 Harness 的通用 URL 抓取接口。
 
 ### 凭据生命周期不同
 
@@ -252,7 +261,7 @@ DSH 插件不把 Key 写进 Cordis 配置，只保存 `ANYSEARCH_API_KEY` 引用
 
 ### 已经使用 DeepSeek Harness
 
-优先安装 DSH 插件。它提供原生 `web_search`、垂直搜索和客户端 batch。当前需要 Extract 时，再并行配置 AnySearch MCP。
+优先安装 DSH 插件。它提供原生 `web_search`、`web_fetch`、垂直搜索和客户端 batch；只有需要 MCP 专属协议能力时才需要并行配置 AnySearch MCP。
 
 ### 使用支持 MCP 的桌面或编码客户端
 

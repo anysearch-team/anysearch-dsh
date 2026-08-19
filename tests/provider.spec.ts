@@ -13,6 +13,7 @@ import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
 import WebRuntime from '@deepseek-ai/dsh-web'
 import {
+  ANYSEARCH_FETCH_PROVIDER_ID,
   ANYSEARCH_PROVIDER_ID,
   AnySearchClient,
   AnySearchProvider,
@@ -130,8 +131,8 @@ describe('AnySearchProvider requests', () => {
     expect(init.headers).toMatchObject({
       authorization: 'Bearer as_sk_test',
       'content-type': 'application/json',
-      'user-agent': 'dsh/0.1.1',
-      'x-anysearch-client': 'dsh/0.1.1',
+      'user-agent': 'dsh/0.1.2',
+      'x-anysearch-client': 'dsh/0.1.2',
     })
     expect(JSON.parse(init.body as string)).toEqual({
       query: 'deepseek harness',
@@ -317,12 +318,30 @@ describe('AnySearch plugin registration', () => {
   })
 
   it('resolves a managed credential on every operation, rejects its literal reference, and unregisters', async () => {
-    const fetchMock = vi.fn(async () => jsonResponse(successEnvelope()))
+    const fetchMock = vi.fn(async (url: string) => jsonResponse(url.endsWith('/v1/extract') ? {
+      code: 0,
+      message: 'success',
+      request_id: 'req_extract',
+      data: {
+        url: 'https://example.test/article',
+        normalized_url: 'https://example.test/article',
+        effective_url: 'https://example.test/article',
+        content: 'Body',
+        content_type: 'text/plain',
+        source_http_status: 200,
+        truncated: false,
+        returned_characters: 4,
+        content_trust: 'external_untrusted',
+      },
+    } : successEnvelope()))
     vi.stubGlobal('fetch', fetchMock)
     const ctx = new Context()
     await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)
-    await ctx.plugin(WebRuntime, { searchProvider: ANYSEARCH_PROVIDER_ID })
+    await ctx.plugin(WebRuntime, {
+      searchProvider: ANYSEARCH_PROVIDER_ID,
+      fetchProvider: ANYSEARCH_FETCH_PROVIDER_ID,
+    })
     await ctx.plugin(MemoryCredentials)
     const ref = credentialRef('CUSTOM_KEY')
     const fiber = await ctx.plugin(anySearchPlugin, { apiKeyEnv: ref })
@@ -336,14 +355,21 @@ describe('AnySearch plugin registration', () => {
     await expect(ctx.web.search({ query: 'q' })).resolves.toEqual({ sources: [], truncated: false })
     await ctx.credentials.set(ref, 'as_sk_rotated')
     await expect(ctx.web.search({ query: 'q' })).resolves.toEqual({ sources: [], truncated: false })
+    await expect(ctx.web.fetch({ url: 'https://example.test/article' })).resolves.toMatchObject({
+      url: 'https://example.test/article',
+      body: { kind: 'text', content: 'Body' },
+    })
 
     const calls = fetchMock.mock.calls as unknown as Array<[string, RequestInit]>
     expect(calls[0]?.[1].headers).not.toHaveProperty('authorization')
     expect(calls[1]?.[1].headers).toMatchObject({ authorization: 'Bearer as_sk_first' })
     expect(calls[2]?.[1].headers).toMatchObject({ authorization: 'Bearer as_sk_rotated' })
+    expect(calls[3]?.[1].headers).toMatchObject({ authorization: 'Bearer as_sk_rotated' })
 
     await fiber.dispose()
     await expect(ctx.web.search({ query: 'q' }))
+      .rejects.toThrow(expect.objectContaining({ code: 'WEB_PROVIDER_CONFIGURED_MISSING' }))
+    await expect(ctx.web.fetch({ url: 'https://example.test/article' }))
       .rejects.toThrow(expect.objectContaining({ code: 'WEB_PROVIDER_CONFIGURED_MISSING' }))
   })
 
@@ -356,6 +382,8 @@ describe('AnySearch plugin registration', () => {
 
     expect(patch).toContain("name: '@anysearch/anysearch-dsh'")
     expect(patch).toContain('apiKeyEnv: ANYSEARCH_API_KEY')
+    expect(patch).toContain('fetchProvider: anysearch')
+    expect(patch).toContain('fetch: true')
     expect(patch).not.toContain('process.env.ANYSEARCH_API_KEY')
   })
 })

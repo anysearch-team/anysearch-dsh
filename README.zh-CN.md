@@ -6,7 +6,7 @@
   <p><a href="README.md">English</a> | <strong>简体中文</strong></p>
 </div>
 
-`@anysearch/anysearch-dsh` 将 [AnySearch](https://anysearch.com) 作为插件接入 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)。无需改变 Harness 使用方式，即可获得实时网页搜索、垂直领域搜索和批量搜索能力。
+`@anysearch/anysearch-dsh` 将 [AnySearch](https://anysearch.com) 作为插件接入 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)。无需改变 Harness 使用方式，即可通过原生 `web_search` 和 `web_fetch` 获得实时网页搜索、URL 清洗正文、垂直领域搜索和批量搜索能力。
 
 AnySearch 是面向 AI Agent 的搜索基础设施，覆盖公开网页，以及代码、金融、学术、法律、安全等专业数据源。
 
@@ -38,6 +38,7 @@ npx -y @deepseek-ai/dsh web
 ## 提供什么
 
 - 通过 Harness 内置的 `web_search` 返回 AnySearch 搜索结果，来源包含标题、摘要和 URL，便于引用。
+- 通过 Harness 内置的 `web_fetch` 调用 AnySearch Extract，抓取并清洗指定公开 HTTP(S) URL 的正文。
 - 实时发现可搜索领域、垂直分类和支持的参数，再用标签、地区、语言和结构化参数执行高级搜索。
 - 一次并发执行一至五个搜索，单项失败不影响其他结果。
 - 高级搜索可按需返回搜索结果中的清洗正文，支持更深入的研究任务。
@@ -67,6 +68,7 @@ npx -y @deepseek-ai/dsh --profile web --dump-config
 | 使用场景 | Harness 工具 |
 |---|---|
 | 普通网页搜索 | `web_search` |
+| 抓取并清洗指定 URL | `web_fetch` |
 | 查看可用领域和标签 | `anysearch_capabilities` |
 | 垂直或参数化搜索 | `anysearch_search` |
 | 一次执行一至五个搜索 | `anysearch_batch_search` |
@@ -81,7 +83,7 @@ Windows、Linux 和 macOS 使用相同的安装命令。安装前请确保 Node.
 
 ## 配置
 
-随包提供的 profile 层会自动将 AnySearch 设为现有 `ctx.web` Provider，并挂载高级工具，默认无需修改。
+随包提供的 profile 层会自动将 AnySearch 设为现有 `ctx.web` 的搜索与抓取 Provider、启用 `web_fetch`，并挂载高级工具，默认无需修改。
 
 如需自定义，请让 AI 助手（或手工）把下面的完整条目加入目标 DSH profile 的用户配置层，以覆盖随包提供的 `id: web-search-anysearch` 配置。保持 `id` 不变，完整替换 `config`，不要使用不同 ID 新增第二个 AnySearch Provider：
 
@@ -116,7 +118,7 @@ npx -y @deepseek-ai/dsh plugin --profile web remove @anysearch/anysearch-dsh
 ## 兼容性与限制
 
 - DeepSeek Harness 仍处于开发预览阶段，可能发布不兼容变更。
-- 本插件当前不提供 `anysearch_extract`。需要抽取完整网页时，可以使用 [AnySearch MCP](https://anysearch.com/docs)。
+- 网页提取通过 Harness 原生 `web_fetch` 暴露；插件不会再增加一个重复的 `anysearch_extract` 工具。
 - 请通过 DSH 管理的凭据文件或环境变量配置 API Key；DSH 设置页当前不提供第三方 Provider 凭据输入项。
 
 ## 文档

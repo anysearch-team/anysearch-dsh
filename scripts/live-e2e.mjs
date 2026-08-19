@@ -11,6 +11,7 @@ import {
   ANYSEARCH_BATCH_SEARCH_TOOL_NAME,
   ANYSEARCH_CAPABILITIES_TOOL_NAME,
   ANYSEARCH_DSH_CLIENT_ID,
+  ANYSEARCH_FETCH_PROVIDER_ID,
   ANYSEARCH_PROVIDER_ID,
   ANYSEARCH_SEARCH_TOOL_NAME,
 } from '../lib/index.js'
@@ -72,7 +73,10 @@ globalThis.fetch = async (input, init) => {
 const ctx = new Context()
 await ctx.plugin(SystemPrompt)
 await ctx.plugin(ToolRuntime)
-await ctx.plugin(WebRuntime, { searchProvider: ANYSEARCH_PROVIDER_ID })
+await ctx.plugin(WebRuntime, {
+  searchProvider: ANYSEARCH_PROVIDER_ID,
+  fetchProvider: ANYSEARCH_FETCH_PROVIDER_ID,
+})
 await ctx.plugin(LiveCredentials)
 const keyRef = credentialRef('ANYSEARCH_API_KEY')
 if (apiKey !== undefined) await ctx.credentials.set(keyRef, apiKey)
@@ -107,6 +111,13 @@ try {
   })
   assert.ok(providerResult.sources.length > 0, 'native web provider returned no sources')
   assert.ok(providerResult.sources[0]?.url, 'native web provider source omitted its URL')
+
+  const fetchResult = await ctx.web.fetch({
+    url: process.env.ANYSEARCH_E2E_EXTRACT_URL?.trim() || 'https://httpbin.dev/html',
+  })
+  assert.equal(fetchResult.statusCode, 200, 'native fetch provider returned a non-200 source status')
+  assert.equal(fetchResult.body.kind, 'text', 'native fetch provider did not return cleaned text')
+  assert.ok(fetchResult.body.content.length > 0, 'native fetch provider returned empty content')
 
   const domainsResult = await call(ANYSEARCH_CAPABILITIES_TOOL_NAME, {})
   assert.equal(domainsResult.isError, false, 'capability catalog tool failed')
@@ -254,10 +265,12 @@ try {
     'batch tool remained registered after plugin disposal')
   await assert.rejects(ctx.web.search({ query: 'after disposal' }),
     error => error?.code === 'WEB_PROVIDER_CONFIGURED_MISSING')
+  await assert.rejects(ctx.web.fetch({ url: 'https://httpbin.dev/html' }),
+    error => error?.code === 'WEB_PROVIDER_CONFIGURED_MISSING')
 
   process.stdout.write(
     `PASS live AnySearch plugin e2e (${anonymousOnly ? 'anonymous' : 'authenticated'}): `
-      + `provider + catalog + ${capability.subDomain} + successful batch`
+      + `search provider + fetch provider + catalog + ${capability.subDomain} + successful batch`
       + `${anonymousOnly ? '' : ' + partial batch'} + cancellation + lifecycle\n`,
   )
 } finally {

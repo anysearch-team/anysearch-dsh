@@ -40,13 +40,16 @@ Inspect the final DSH configuration:
 npx -y @deepseek-ai/dsh --profile web --dump-config
 ```
 
-Confirm that the output selects AnySearch for the existing web provider:
+Confirm that the output selects AnySearch for the existing search and fetch providers:
 
 ```yaml
 - id: web
   config:
     searchProvider: anysearch
+    fetchProvider: anysearch
 ```
+
+Also confirm that `tool-web` has `fetch: true`.
 
 Also confirm that the AnySearch plugin entry is present:
 
@@ -79,7 +82,7 @@ Start the `web` profile:
 npx -y @deepseek-ai/dsh web
 ```
 
-The plugin automatically powers Harness's native `web_search` tool and mounts the advanced AnySearch tools. No configuration change is required by default.
+The plugin automatically powers Harness's native `web_search` and `web_fetch` tools and mounts the advanced AnySearch tools. No configuration change is required by default.
 
 ## 6. Report completion
 
@@ -87,7 +90,7 @@ Tell the user:
 
 - whether the prerequisite checks passed;
 - whether the plugin installation completed;
-- whether the composed profile selected `searchProvider: anysearch`;
+- whether the composed profile selected both `searchProvider: anysearch` and `fetchProvider: anysearch`;
 - whether Harness started successfully;
 - that anonymous quota is active unless the user configured an API key.
 
