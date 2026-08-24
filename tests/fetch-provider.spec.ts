@@ -20,15 +20,8 @@ function extractResponse(overrides: Partial<AnySearchExtractResponse> = {}): Any
   return {
     requestId: 'req_extract',
     url: 'https://example.test/article',
-    normalizedUrl: 'https://example.test/article',
-    effectiveUrl: 'https://www.example.test/article',
     title: 'Example article',
     content: '# Example article\n\nCleaned body.',
-    contentType: 'text/html',
-    sourceHttpStatus: 200,
-    truncated: false,
-    returnedCharacters: 32,
-    contentTrust: 'external_untrusted',
     ...overrides,
   }
 }
@@ -40,15 +33,8 @@ function successEnvelope(): unknown {
     request_id: 'req_extract',
     data: {
       url: 'https://example.test/article',
-      normalized_url: 'https://example.test/article',
-      effective_url: 'https://www.example.test/article',
       title: 'Example article',
       content: '# Example article\n\nCleaned body.',
-      content_type: 'text/html',
-      source_http_status: 200,
-      truncated: false,
-      returned_characters: 32,
-      content_trust: 'external_untrusted',
     },
   }
 }
@@ -68,15 +54,11 @@ afterEach(() => {
 describe('AnySearch fetch result mapping', () => {
   it('returns cleaned HTML extraction as text so Harness does not convert it twice', () => {
     expect(mapAnySearchExtractResponse(extractResponse())).toEqual({
-      url: 'https://www.example.test/article',
+      url: 'https://example.test/article',
       statusCode: 200,
       body: { kind: 'text', content: '# Example article\n\nCleaned body.' },
       truncated: false,
     })
-  })
-
-  it('preserves the API truncation marker', () => {
-    expect(mapAnySearchExtractResponse(extractResponse({ truncated: true })).truncated).toBe(true)
   })
 })
 
@@ -86,8 +68,10 @@ describe('AnySearchFetchProvider', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     await expect(provider().fetch({ url: 'https://example.test/article' })).resolves.toMatchObject({
-      url: 'https://www.example.test/article',
+      url: 'https://example.test/article',
+      statusCode: 200,
       body: { kind: 'text' },
+      truncated: false,
     })
 
     expect(provider().id).toBe(ANYSEARCH_FETCH_PROVIDER_ID)

@@ -44,15 +44,8 @@ function extractEnvelope(): unknown {
     request_id: 'req_extract',
     data: {
       url: 'https://example.test/article',
-      normalized_url: 'https://example.test/article',
-      effective_url: 'https://www.example.test/article',
       title: 'Example article',
       content: '# Example article\n\nCleaned body.',
-      content_type: 'text/html',
-      source_http_status: 200,
-      truncated: false,
-      returned_characters: 32,
-      content_trust: 'external_untrusted',
     },
   }
 }
@@ -162,15 +155,8 @@ describe('AnySearchClient extract', () => {
     })).resolves.toEqual({
       requestId: 'req_extract',
       url: 'https://example.test/article',
-      normalizedUrl: 'https://example.test/article',
-      effectiveUrl: 'https://www.example.test/article',
       title: 'Example article',
       content: '# Example article\n\nCleaned body.',
-      contentType: 'text/html',
-      sourceHttpStatus: 200,
-      truncated: false,
-      returnedCharacters: 32,
-      contentTrust: 'external_untrusted',
     })
 
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
@@ -186,24 +172,19 @@ describe('AnySearchClient extract', () => {
 
   it.each([
     {
-      name: 'trust marker',
-      mutate: (data: Record<string, unknown>) => { data.content_trust = 'trusted' },
-      message: 'data.content_trust must be external_untrusted',
+      name: 'URL',
+      mutate: (data: Record<string, unknown>) => { data.url = 'file:///private' },
+      message: 'data.url must be an absolute HTTP(S) URL',
     },
     {
-      name: 'character count',
-      mutate: (data: Record<string, unknown>) => { data.returned_characters = 31 },
-      message: 'data.returned_characters must equal the content character count (32)',
+      name: 'title',
+      mutate: (data: Record<string, unknown>) => { delete data.title },
+      message: 'data.title must be a string',
     },
     {
-      name: 'effective URL',
-      mutate: (data: Record<string, unknown>) => { data.effective_url = 'file:///private' },
-      message: 'data.effective_url must be an absolute HTTP(S) URL',
-    },
-    {
-      name: 'source status',
-      mutate: (data: Record<string, unknown>) => { data.source_http_status = 404 },
-      message: 'data.source_http_status must be an integer from 200 through 299',
+      name: 'content',
+      mutate: (data: Record<string, unknown>) => { data.content = null },
+      message: 'data.content must be a string',
     },
   ])('rejects an invalid Extract $name', async ({ mutate, message }) => {
     const envelope = extractEnvelope() as { data: Record<string, unknown> }

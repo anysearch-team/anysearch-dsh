@@ -115,7 +115,7 @@ try {
   const fetchResult = await ctx.web.fetch({
     url: process.env.ANYSEARCH_E2E_EXTRACT_URL?.trim() || 'https://httpbin.dev/html',
   })
-  assert.equal(fetchResult.statusCode, 200, 'native fetch provider returned a non-200 source status')
+  assert.equal(fetchResult.statusCode, 200, 'native fetch provider did not normalize Extract success to HTTP 200')
   assert.equal(fetchResult.body.kind, 'text', 'native fetch provider did not return cleaned text')
   assert.ok(fetchResult.body.content.length > 0, 'native fetch provider returned empty content')
 
