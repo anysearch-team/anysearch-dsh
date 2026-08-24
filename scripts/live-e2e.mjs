@@ -101,6 +101,7 @@ try {
   assert.ok(toolNames.includes(ANYSEARCH_CAPABILITIES_TOOL_NAME), 'capability tool missing from model assembly')
   assert.ok(toolNames.includes(ANYSEARCH_SEARCH_TOOL_NAME), 'advanced search tool missing from model assembly')
   assert.ok(toolNames.includes(ANYSEARCH_BATCH_SEARCH_TOOL_NAME), 'batch tool missing from model assembly')
+  assert.ok(toolNames.includes('web_fetch'), 'native web_fetch tool missing from model assembly')
   if (apiKey !== undefined) {
     assert.ok(!JSON.stringify(assembly).includes(apiKey), 'API key leaked into model assembly')
   }
@@ -112,12 +113,14 @@ try {
   assert.ok(providerResult.sources.length > 0, 'native web provider returned no sources')
   assert.ok(providerResult.sources[0]?.url, 'native web provider source omitted its URL')
 
-  const fetchResult = await ctx.web.fetch({
+  const fetchResult = await call('web_fetch', {
     url: process.env.ANYSEARCH_E2E_EXTRACT_URL?.trim() || 'https://httpbin.dev/html',
   })
-  assert.equal(fetchResult.statusCode, 200, 'native fetch provider did not normalize Extract success to HTTP 200')
-  assert.equal(fetchResult.body.kind, 'text', 'native fetch provider did not return cleaned text')
-  assert.ok(fetchResult.body.content.length > 0, 'native fetch provider returned empty content')
+  assert.equal(fetchResult.isError, false, 'native web_fetch tool failed')
+  assert.equal(fetchResult.value?.statusCode, 200,
+    'native fetch provider did not normalize Extract success to HTTP 200')
+  assert.equal(fetchResult.value?.body.kind, 'text', 'native fetch provider did not return cleaned text')
+  assert.ok(fetchResult.value?.body.content.length > 0, 'native fetch provider returned empty content')
 
   const domainsResult = await call(ANYSEARCH_CAPABILITIES_TOOL_NAME, {})
   assert.equal(domainsResult.isError, false, 'capability catalog tool failed')
@@ -263,6 +266,8 @@ try {
     'advanced search tool remained registered after plugin disposal')
   assert.equal(ctx.tools.get(ANYSEARCH_BATCH_SEARCH_TOOL_NAME), undefined,
     'batch tool remained registered after plugin disposal')
+  assert.equal(ctx.tools.get('web_fetch'), undefined,
+    'native web_fetch remained registered after plugin disposal')
   await assert.rejects(ctx.web.search({ query: 'after disposal' }),
     error => error?.code === 'WEB_PROVIDER_CONFIGURED_MISSING')
   await assert.rejects(ctx.web.fetch({ url: 'https://httpbin.dev/html' }),

@@ -9,7 +9,13 @@ import {
   type CredentialRef,
   type ResolvedCredential,
 } from '@deepseek-ai/dsh-credentials'
+import { CallId } from '@deepseek-ai/dsh-llm'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
+import {
+  applyWebFetchTool,
+  DEFAULT_FETCH_MAX_OUTPUT_CHARS,
+  DEFAULT_WEB_TOOL_TIMEOUT_MS,
+} from '@deepseek-ai/dsh-tool-web'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
 import WebRuntime from '@deepseek-ai/dsh-web'
 import {
@@ -131,8 +137,8 @@ describe('AnySearchProvider requests', () => {
     expect(init.headers).toMatchObject({
       authorization: 'Bearer as_sk_test',
       'content-type': 'application/json',
-      'user-agent': 'dsh/0.1.3',
-      'x-anysearch-client': 'dsh/0.1.3',
+      'user-agent': 'dsh/0.1.4',
+      'x-anysearch-client': 'dsh/0.1.4',
     })
     expect(JSON.parse(init.body as string)).toEqual({
       query: 'deepseek harness',
@@ -353,18 +359,53 @@ describe('AnySearch plugin registration', () => {
       url: 'https://example.test/article',
       body: { kind: 'text', content: 'Body' },
     })
+    const toolFetch = await ctx.tools.execute({
+      callId: CallId('web-fetch-registration'),
+      name: 'web_fetch',
+      arguments: { url: 'https://example.test/article' },
+      signal: new AbortController().signal,
+    })
+    expect(toolFetch).toMatchObject({
+      isError: false,
+      value: {
+        url: 'https://example.test/article',
+        statusCode: 200,
+        body: { kind: 'text', content: 'Body' },
+      },
+    })
 
     const calls = fetchMock.mock.calls as unknown as Array<[string, RequestInit]>
     expect(calls[0]?.[1].headers).not.toHaveProperty('authorization')
     expect(calls[1]?.[1].headers).toMatchObject({ authorization: 'Bearer as_sk_first' })
     expect(calls[2]?.[1].headers).toMatchObject({ authorization: 'Bearer as_sk_rotated' })
     expect(calls[3]?.[1].headers).toMatchObject({ authorization: 'Bearer as_sk_rotated' })
+    expect(calls[4]?.[1].headers).toMatchObject({ authorization: 'Bearer as_sk_rotated' })
 
     await fiber.dispose()
+    expect(ctx.tools.get('web_fetch')).toBeUndefined()
     await expect(ctx.web.search({ query: 'q' }))
       .rejects.toThrow(expect.objectContaining({ code: 'WEB_PROVIDER_CONFIGURED_MISSING' }))
     await expect(ctx.web.fetch({ url: 'https://example.test/article' }))
       .rejects.toThrow(expect.objectContaining({ code: 'WEB_PROVIDER_CONFIGURED_MISSING' }))
+  })
+
+  it('keeps an existing global native web_fetch instead of registering a duplicate', async () => {
+    const ctx = new Context()
+    await ctx.plugin(SystemPrompt)
+    await ctx.plugin(ToolRuntime)
+    await ctx.plugin(WebRuntime, {
+      searchProvider: ANYSEARCH_PROVIDER_ID,
+      fetchProvider: ANYSEARCH_FETCH_PROVIDER_ID,
+    })
+    await ctx.plugin(MemoryCredentials)
+    applyWebFetchTool(ctx, DEFAULT_WEB_TOOL_TIMEOUT_MS, DEFAULT_FETCH_MAX_OUTPUT_CHARS)
+    const existing = ctx.tools.get('web_fetch')
+
+    const fiber = await ctx.plugin(anySearchPlugin, {})
+
+    expect(ctx.tools.get('web_fetch')).toBe(existing)
+    await fiber.dispose()
+    expect(ctx.tools.get('web_fetch')).toBe(existing)
   })
 
   it('uses the namespace plugin export form', () => {
@@ -377,7 +418,8 @@ describe('AnySearch plugin registration', () => {
     expect(patch).toContain("name: '@anysearch/anysearch-dsh'")
     expect(patch).toContain('apiKeyEnv: ANYSEARCH_API_KEY')
     expect(patch).toContain('fetchProvider: anysearch')
-    expect(patch).toContain('fetch: true')
+    expect(patch).not.toContain('- id: tool-web')
+    expect(patch).not.toContain('fetch: true')
     expect(patch).not.toContain('process.env.ANYSEARCH_API_KEY')
   })
 })

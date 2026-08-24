@@ -2,7 +2,13 @@
 
 import type { Context } from '@deepseek-ai/cordis'
 import { credentialRef } from '@deepseek-ai/dsh-credentials'
+import type {} from '@deepseek-ai/dsh-system-prompt'
 import type {} from '@deepseek-ai/dsh-tools'
+import {
+  applyWebFetchTool,
+  DEFAULT_FETCH_MAX_OUTPUT_CHARS,
+  DEFAULT_WEB_TOOL_TIMEOUT_MS,
+} from '@deepseek-ai/dsh-tool-web'
 import type {} from '@deepseek-ai/dsh-web'
 import z from '@deepseek-ai/schemastery'
 import {
@@ -88,8 +94,8 @@ export type {
 /** Cordis plugin name used in loader diagnostics. */
 export const name = 'web-search-anysearch'
 
-/** Capability seams required by the Provider and advanced tools. */
-export const inject = ['web', 'credentials', 'tools']
+/** Capability seams required by the Providers and model-facing tools. */
+export const inject = ['web', 'credentials', 'systemPrompt', 'tools']
 
 const DEFAULT_API_KEY_ENV = 'ANYSEARCH_API_KEY'
 
@@ -156,6 +162,9 @@ export function apply(ctx: Context, config: Config): void {
   })
   ctx.web.registerSearchProvider(new AnySearchProvider(client))
   ctx.web.registerFetchProvider(new AnySearchFetchProvider(client))
+  if (ctx.tools.get('web_fetch') === undefined) {
+    applyWebFetchTool(ctx, DEFAULT_WEB_TOOL_TIMEOUT_MS, DEFAULT_FETCH_MAX_OUTPUT_CHARS)
+  }
   registerCapabilitiesTool(ctx, client)
   registerBatchSearchTool(ctx, client, resolved.maxRenderedContentChars)
   registerAdvancedSearchTool(
