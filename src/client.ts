@@ -348,35 +348,13 @@ function parseSearchData(envelope: EnvelopeData): AnySearchSearchResponse {
 function parseExtractData(envelope: EnvelopeData): AnySearchExtractResponse {
   const data = envelope.data
   const url = absoluteHTTPURLField(data, 'url', 'data.url')
-  const normalizedUrl = absoluteHTTPURLField(data, 'normalized_url', 'data.normalized_url')
-  const effectiveUrl = absoluteHTTPURLField(data, 'effective_url', 'data.effective_url')
-  const title = optionalStringRecordField(data, 'title', 'data.title')
+  const title = stringField(data, 'title', 'data.title')
   const content = stringField(data, 'content', 'data.content')
-  const contentType = stringField(data, 'content_type', 'data.content_type')
-  if (contentType.trim().length === 0) throw new TypeError('data.content_type must not be empty')
-  const sourceHttpStatus = integerInRangeField(data, 'source_http_status', 'data.source_http_status', 200, 299)
-  const truncated = booleanField(data, 'truncated', 'data.truncated')
-  const returnedCharacters = nonNegativeIntegerField(data, 'returned_characters', 'data.returned_characters')
-  const actualCharacters = [...content].length
-  if (returnedCharacters !== actualCharacters) {
-    throw new TypeError(`data.returned_characters must equal the content character count (${actualCharacters})`)
-  }
-  const contentTrust = stringField(data, 'content_trust', 'data.content_trust')
-  if (contentTrust !== 'external_untrusted') {
-    throw new TypeError('data.content_trust must be external_untrusted')
-  }
   return {
     ...envelope.requestId === undefined ? {} : { requestId: envelope.requestId },
     url,
-    normalizedUrl,
-    effectiveUrl,
-    ...title === undefined ? {} : { title },
+    title,
     content,
-    contentType,
-    sourceHttpStatus,
-    truncated,
-    returnedCharacters,
-    contentTrust,
   }
 }
 
@@ -519,20 +497,6 @@ function nonNegativeIntegerField(value: Record<string, unknown>, key: string, pa
   if (typeof field !== 'number') throw new TypeError(`${path} must be a number`)
   if (!Number.isSafeInteger(field) || field < 0) throw new TypeError(`${path} must be a non-negative integer`)
   return field
-}
-
-function integerInRangeField(
-  value: Record<string, unknown>,
-  key: string,
-  path: string,
-  minimum: number,
-  maximum: number,
-): number {
-  const field = value[key]
-  if (!Number.isSafeInteger(field) || (field as number) < minimum || (field as number) > maximum) {
-    throw new TypeError(`${path} must be an integer from ${minimum} through ${maximum}`)
-  }
-  return field as number
 }
 
 function booleanField(value: Record<string, unknown>, key: string, path: string): boolean {

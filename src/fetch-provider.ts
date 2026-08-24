@@ -16,10 +16,13 @@ export const ANYSEARCH_FETCH_PROVIDER_ID = ANYSEARCH_PROVIDER_ID
 /** Map cleaned Extract output into the provider-neutral fetch result. */
 export function mapAnySearchExtractResponse(response: AnySearchExtractResponse): WebFetchResult {
   return {
-    url: response.effectiveUrl,
-    statusCode: response.sourceHttpStatus,
+    url: response.url,
+    // The public Extract success projection omits internal source status and truncation metadata.
+    // A successful response is normalized to the fields required by the DSH fetch seam; this
+    // adapter does not truncate the returned cleaned content further.
+    statusCode: 200,
     body: { kind: 'text', content: response.content },
-    truncated: response.truncated,
+    truncated: false,
   }
 }
 

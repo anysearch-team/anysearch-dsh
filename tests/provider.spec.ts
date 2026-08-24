@@ -324,14 +324,8 @@ describe('AnySearch plugin registration', () => {
       request_id: 'req_extract',
       data: {
         url: 'https://example.test/article',
-        normalized_url: 'https://example.test/article',
-        effective_url: 'https://example.test/article',
+        title: 'Article',
         content: 'Body',
-        content_type: 'text/plain',
-        source_http_status: 200,
-        truncated: false,
-        returned_characters: 4,
-        content_trust: 'external_untrusted',
       },
     } : successEnvelope()))
     vi.stubGlobal('fetch', fetchMock)

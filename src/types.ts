@@ -41,15 +41,8 @@ export interface AnySearchExtractRequest {
 export interface AnySearchExtractResponse {
   requestId?: string
   url: string
-  normalizedUrl: string
-  effectiveUrl: string
-  title?: string
+  title: string
   content: string
-  contentType: string
-  sourceHttpStatus: number
-  truncated: boolean
-  returnedCharacters: number
-  contentTrust: 'external_untrusted'
 }
 
 /** One top-level search domain returned by the dynamic capability catalog. */
