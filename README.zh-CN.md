@@ -137,8 +137,8 @@ npx -y @deepseek-ai/dsh plugin --profile web remove @anysearch/anysearch-dsh
 <div align="center">
   <table>
     <tr>
-      <td align="center"><strong>微信群入群问卷</strong><br><img src="docs/assets/wechat-community-qr.jpg" alt="微信群入群问卷二维码" width="180"></td>
-      <td align="center"><strong>Discord 邀请</strong><br><img src="docs/assets/discord-community-qr.png" alt="Discord 邀请二维码" width="180"></td>
+      <td align="center"><strong>微信群入群问卷</strong><br><img src="docs/assets/discord-community-qr.png" alt="微信群入群问卷二维码" width="180"></td>
+      <td align="center"><strong>Discord 邀请</strong><br><img src="docs/assets/wechat-community-qr.jpg" alt="Discord 邀请二维码" width="180"></td>
     </tr>
   </table>
 </div>

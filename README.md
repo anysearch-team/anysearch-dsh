@@ -137,8 +137,8 @@ Join the AnySearch community to share your experience, report issues, and get te
 <div align="center">
   <table>
     <tr>
-      <td align="center"><strong>WeChat group survey</strong><br><img src="docs/assets/wechat-community-qr.jpg" alt="WeChat group survey QR code" width="180"></td>
-      <td align="center"><strong>Discord invite</strong><br><img src="docs/assets/discord-community-qr.png" alt="Discord invite QR code" width="180"></td>
+      <td align="center"><strong>WeChat group survey</strong><br><img src="docs/assets/discord-community-qr.png" alt="WeChat group survey QR code" width="180"></td>
+      <td align="center"><strong>Discord invite</strong><br><img src="docs/assets/wechat-community-qr.jpg" alt="Discord invite QR code" width="180"></td>
     </tr>
   </table>
 </div>
