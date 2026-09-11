@@ -99,7 +99,7 @@ export class AnySearchClient {
     return endpoint(this.options.baseURL, '/v1/search') !== undefined
   }
 
-  /** Execute one search and validate its complete response. */
+  /** Execute one search, validating its complete response and omitting rows without a citable URL. */
   async search(request: AnySearchSearchRequest, signal?: AbortSignal): Promise<AnySearchSearchResponse> {
     const envelope = await this.request('/v1/search', 'search', {
       method: 'POST',
@@ -327,6 +327,7 @@ function endpoint(baseURL: string, path: string): string | undefined {
 function parseSearchData(envelope: EnvelopeData): AnySearchSearchResponse {
   const parsedResults = arrayField(envelope.data, 'results', 'data.results')
     .map((value, index) => parseSearchResult(value, index))
+    .filter((result) => result !== undefined)
   let remainingContentCharacters = MAX_CANONICAL_CONTENT_CHARS
   const results = parsedResults.map((result) => {
     if (result.content === undefined) return result
@@ -358,11 +359,13 @@ function parseExtractData(envelope: EnvelopeData): AnySearchExtractResponse {
   }
 }
 
-function parseSearchResult(value: unknown, index: number): AnySearchResult {
+function parseSearchResult(value: unknown, index: number): AnySearchResult | undefined {
   const path = `data.results[${index}]`
   const result = record(value, path)
-  const url = stringField(result, 'url', `${path}.url`)
-  if (!URL.canParse(url)) throw new TypeError(`${path}.url must be an absolute URL`)
+  // Upstream rows occasionally carry an empty, truncated, or markup-tainted link.
+  // Such a row cannot be cited, so omit it instead of failing the whole search.
+  const url = absoluteHTTPURLValue(result.url)
+  if (url === undefined) return undefined
   const snippet = optionalStringRecordField(result, 'snippet', `${path}.snippet`)
   const content = optionalStringRecordField(result, 'content', `${path}.content`)
   return {
@@ -452,17 +455,21 @@ function stringField(value: Record<string, unknown>, key: string, path: string):
   return field
 }
 
-function absoluteHTTPURLField(value: Record<string, unknown>, key: string, path: string): string {
-  const field = stringField(value, key, path)
+function absoluteHTTPURLValue(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined
   let url: URL
   try {
-    url = new URL(field)
+    url = new URL(value)
   } catch {
-    throw new TypeError(`${path} must be an absolute HTTP(S) URL`)
+    return undefined
   }
-  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-    throw new TypeError(`${path} must be an absolute HTTP(S) URL`)
-  }
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return undefined
+  return value
+}
+
+function absoluteHTTPURLField(value: Record<string, unknown>, key: string, path: string): string {
+  const field = absoluteHTTPURLValue(stringField(value, key, path))
+  if (field === undefined) throw new TypeError(`${path} must be an absolute HTTP(S) URL`)
   return field
 }
 

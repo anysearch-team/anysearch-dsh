@@ -143,6 +143,49 @@ describe('AnySearchClient search', () => {
     expect(result.results.reduce((total, item) => total + (item.content?.length ?? 0), 0))
       .toBe(MAX_CANONICAL_CONTENT_CHARS)
   })
+
+  it('omits result rows whose upstream link is not a citable HTTP(S) URL', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => jsonResponse({
+      code: 0,
+      message: 'success',
+      data: {
+        results: [
+          { title: 'Usable', url: 'https://github.com/deepseek-ai/deepseek-harness', snippet: 'kept' },
+          // Captured verbatim from api.anysearch.com: the highlighted truncated
+          // link and the truncated port are real upstream rows.
+          { title: 'Highlighted and truncated', url: 'https://<b>github</b>.com/<b>dee' },
+          { title: 'Truncated port', url: 'http://127.0.0.1:3080.' },
+          { title: 'Empty link', url: '' },
+          { title: 'Non-HTTP scheme', url: 'javascript:alert(1)' },
+          { title: 'Also usable', url: 'https://www.deepseek.com/harness/en/' },
+        ],
+        metadata: { total_results: 6, search_time_ms: 12 },
+      },
+    })))
+
+    const result = await new AnySearchClient(options).search({ query: 'mixed rows' })
+
+    expect(result.results.map(item => item.url)).toEqual([
+      'https://github.com/deepseek-ai/deepseek-harness',
+      'https://www.deepseek.com/harness/en/',
+    ])
+    expect(result.results[0]?.snippet).toBe('kept')
+    expect(result.metadata).toEqual({ totalResults: 6, searchTimeMs: 12 })
+  })
+
+  it('still fails closed on a structurally malformed result row', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => jsonResponse({
+      code: 0,
+      message: 'success',
+      data: {
+        results: [{ title: 42, url: 'https://result.test/a' }],
+        metadata: { total_results: 1, search_time_ms: 1 },
+      },
+    })))
+
+    await expect(new AnySearchClient(options).search({ query: 'malformed row' }))
+      .rejects.toThrow('data.results[0].title must be a string')
+  })
 })
 
 describe('AnySearchClient extract', () => {
