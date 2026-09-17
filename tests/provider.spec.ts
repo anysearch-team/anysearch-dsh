@@ -151,8 +151,8 @@ describe('AnySearchProvider requests', () => {
     expect(init.headers).toMatchObject({
       authorization: 'Bearer as_sk_test',
       'content-type': 'application/json',
-      'user-agent': 'dsh/0.1.4',
-      'x-anysearch-client': 'dsh/0.1.4',
+      'user-agent': 'dsh/0.1.5',
+      'x-anysearch-client': 'dsh/0.1.5',
     })
     expect(JSON.parse(init.body as string)).toEqual({
       query: 'deepseek harness',
