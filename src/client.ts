@@ -325,8 +325,11 @@ function endpoint(baseURL: string, path: string): string | undefined {
 }
 
 function parseSearchData(envelope: EnvelopeData): AnySearchSearchResponse {
-  const parsedResults = arrayField(envelope.data, 'results', 'data.results')
+  const parsedItems = arrayField(envelope.data, 'results', 'data.results')
     .map((value, index) => parseSearchResult(value, index))
+  const parsedResults = parsedItems.flatMap(item => item.kind === 'invalid-url' ? [] : [item.result])
+  const urlLessResults = parsedItems.filter(item => item.kind === 'url-less').length
+  const droppedInvalidUrlResults = parsedItems.filter(item => item.kind === 'invalid-url').length
   let remainingContentCharacters = MAX_CANONICAL_CONTENT_CHARS
   const results = parsedResults.map((result) => {
     if (result.content === undefined) return result
@@ -341,6 +344,8 @@ function parseSearchData(envelope: EnvelopeData): AnySearchSearchResponse {
     metadata: {
       totalResults: nonNegativeIntegerField(metadata, 'total_results', 'data.metadata.total_results'),
       searchTimeMs: nonNegativeIntegerField(metadata, 'search_time_ms', 'data.metadata.search_time_ms'),
+      ...urlLessResults === 0 ? {} : { urlLessResults },
+      ...droppedInvalidUrlResults === 0 ? {} : { droppedInvalidUrlResults },
     },
   }
 }
@@ -358,19 +363,25 @@ function parseExtractData(envelope: EnvelopeData): AnySearchExtractResponse {
   }
 }
 
-function parseSearchResult(value: unknown, index: number): AnySearchResult {
+type ParsedSearchResult =
+  | { kind: 'citeable'; result: AnySearchResult & { url: string } }
+  | { kind: 'url-less'; result: AnySearchResult & { url?: undefined } }
+  | { kind: 'invalid-url' }
+
+function parseSearchResult(value: unknown, index: number): ParsedSearchResult {
   const path = `data.results[${index}]`
   const result = record(value, path)
   const url = stringField(result, 'url', `${path}.url`)
-  if (!URL.canParse(url)) throw new TypeError(`${path}.url must be an absolute URL`)
+  if (url.length > 0 && !isAbsoluteHTTPURL(url)) return { kind: 'invalid-url' }
+  const title = stringField(result, 'title', `${path}.title`)
   const snippet = optionalStringRecordField(result, 'snippet', `${path}.snippet`)
   const content = optionalStringRecordField(result, 'content', `${path}.content`)
-  return {
-    title: stringField(result, 'title', `${path}.title`),
-    url,
+  const optionalFields = {
     ...snippet === undefined ? {} : { snippet },
     ...content === undefined ? {} : { content },
   }
+  if (url.length === 0) return { kind: 'url-less', result: { title, ...optionalFields } }
+  return { kind: 'citeable', result: { title, url, ...optionalFields } }
 }
 
 function parseDomainsData(envelope: EnvelopeData): AnySearchDomainsResponse {
@@ -454,16 +465,18 @@ function stringField(value: Record<string, unknown>, key: string, path: string):
 
 function absoluteHTTPURLField(value: Record<string, unknown>, key: string, path: string): string {
   const field = stringField(value, key, path)
+  if (!isAbsoluteHTTPURL(field)) throw new TypeError(`${path} must be an absolute HTTP(S) URL`)
+  return field
+}
+
+function isAbsoluteHTTPURL(value: string): boolean {
   let url: URL
   try {
-    url = new URL(field)
+    url = new URL(value)
   } catch {
-    throw new TypeError(`${path} must be an absolute HTTP(S) URL`)
+    return false
   }
-  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-    throw new TypeError(`${path} must be an absolute HTTP(S) URL`)
-  }
-  return field
+  return url.protocol === 'http:' || url.protocol === 'https:'
 }
 
 function optionalStringRecordField(value: Record<string, unknown>, key: string, path: string): string | undefined {

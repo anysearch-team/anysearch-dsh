@@ -109,14 +109,28 @@ describe('AnySearch result mapping', () => {
       requestId: 'req_test',
       results: [
         { title: 'A', url: 'https://a.test', snippet: 'one' },
+        { title: 'Structured data', content: '{"value":1}' },
         { title: 'B', url: 'https://b.test' },
       ],
-      metadata: { totalResults: 2, searchTimeMs: 12 },
+      metadata: { totalResults: 3, searchTimeMs: 12, urlLessResults: 1 },
     })).toEqual({
       sources: [
         { title: 'A', url: 'https://a.test', snippet: 'one' },
         { title: 'B', url: 'https://b.test' },
       ],
+      truncated: false,
+    })
+  })
+
+  it('keeps native web_search available when individual source URLs are unusable', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => jsonResponse(successEnvelope([
+      { title: 'Valid', url: 'https://valid.test/result', snippet: 'usable' },
+      { title: 'No URL', url: '', content: 'structured data belongs to advanced search' },
+      { title: 'Broken URL', url: '/relative' },
+    ]))))
+
+    await expect(provider().search({ query: 'mixed sources' })).resolves.toEqual({
+      sources: [{ title: 'Valid', url: 'https://valid.test/result', snippet: 'usable' }],
       truncated: false,
     })
   })

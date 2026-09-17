@@ -186,6 +186,39 @@ describe('anysearch_batch_search', () => {
     await fiber.dispose()
   })
 
+  it('retains URL-less vertical data even when page content was not requested', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => jsonResponse({
+      code: 0,
+      message: 'success',
+      request_id: 'req_macro',
+      data: {
+        results: [{ title: 'LPR', url: '', content: '{"1y":3,"5y":3.5}' }],
+        metadata: { total_results: 1, search_time_ms: 4 },
+      },
+    })))
+    const { fiber, call } = await mount()
+
+    const result = await call({
+      items: [{ query: 'LPR', tag: 'finance.macro', params: { type: 'lpr', period: '1y' } }],
+    })
+
+    expect(result.isError).toBe(false)
+    expect(result.value).toMatchObject({
+      summary: { total: 1, succeeded: 1, failed: 0 },
+      items: [{
+        ok: true,
+        results: [{ title: 'LPR', content: '{"1y":3,"5y":3.5}' }],
+        metadata: { urlLessResults: 1 },
+      }],
+      renderedContentTruncated: false,
+    })
+    const text = result.content.map(block => block.type === 'text' ? block.text : '').join('')
+    expect(text).toContain('Structured results without source URLs')
+    expect(text).toContain('{"1y":3,"5y":3.5}')
+    expect(text).not.toContain(']()')
+    await fiber.dispose()
+  })
+
   it('rejects an empty, oversized, or invalid batch before sending HTTP', async () => {
     const fetchMock = vi.fn()
     vi.stubGlobal('fetch', fetchMock)

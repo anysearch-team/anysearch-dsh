@@ -296,6 +296,46 @@ describe('anysearch_search', () => {
     await fiber.dispose()
   })
 
+  it('preserves and renders URL-less vertical data without creating citation sources', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => jsonResponse({
+      code: 0,
+      message: 'success',
+      request_id: 'req_finance',
+      data: {
+        results: [{
+          title: '贵州茅台行情',
+          url: '',
+          content: '{"close":1272.75,"change":-5.21}',
+        }],
+        metadata: { total_results: 1, search_time_ms: 8 },
+      },
+    })))
+    const { ctx, fiber, call } = await mount()
+
+    const result = await call(ANYSEARCH_SEARCH_TOOL_NAME, {
+      query: '贵州茅台股价',
+      tag: 'finance.quote',
+      params: { type: 'stock', cn_code: '600519.SH' },
+    })
+
+    expect(result.isError).toBe(false)
+    expect(result.value).toMatchObject({
+      results: [{ title: '贵州茅台行情', content: '{"close":1272.75,"change":-5.21}' }],
+      metadata: { totalResults: 1, searchTimeMs: 8, urlLessResults: 1 },
+      renderedContentTruncated: false,
+    })
+    const rendered = result.content.map(block => block.type === 'text' ? block.text : '').join('')
+    expect(rendered).toContain('Structured results without source URLs')
+    expect(rendered).toContain('{"close":1272.75,"change":-5.21}')
+    expect(rendered).not.toContain(']()')
+    expect(result.meta).toEqual({ sources: [], truncated: false })
+    expect(ctx.tools.get(ANYSEARCH_SEARCH_TOOL_NAME)?.presentResult?.(
+      { query: '贵州茅台股价' },
+      { content: result.content, isError: result.isError, ...result.meta === undefined ? {} : { meta: result.meta } },
+    )).toMatchObject({ card: 'web', kind: 'search', sources: [] })
+    await fiber.dispose()
+  })
+
   it('rejects constraints the schema cannot express before HTTP', async () => {
     const fetchMock = vi.fn()
     vi.stubGlobal('fetch', fetchMock)

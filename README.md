@@ -41,7 +41,7 @@ No API key is required for a quick start. Requests use AnySearch's anonymous quo
 - Through Harness's built-in `web_fetch`, AnySearch Extract retrieves and cleans the content of a specific public HTTP(S) URL.
 - Discover searchable domains, vertical categories, and supported parameters in real time, then run advanced searches using tags, regions, languages, and structured parameters.
 - Run one to five searches concurrently; an individual failure does not affect the other results.
-- Advanced search can return cleaned page content on demand for deeper research.
+- Advanced search preserves useful structured results without source URLs, while page-backed results can return cleaned content on demand.
 
 ## Optional API key
 
@@ -99,7 +99,7 @@ To customize it, ask an AI assistant—or edit it manually—to add the complete
 |---|---|---|
 | `apiKeyEnv` | `ANYSEARCH_API_KEY` | DSH credential reference; missing uses anonymous access |
 | `baseURL` | `https://api.anysearch.com` | AnySearch API base URL |
-| `maxRenderedContentChars` | `12000` | Maximum cleaned-content characters rendered to the model per advanced tool call |
+| `maxRenderedContentChars` | `12000` | Maximum result-content characters rendered to the model per advanced tool call |
 
 ## Manage the plugin
 

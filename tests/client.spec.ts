@@ -143,6 +143,37 @@ describe('AnySearchClient search', () => {
     expect(result.results.reduce((total, item) => total + (item.content?.length ?? 0), 0))
       .toBe(MAX_CANONICAL_CONTENT_CHARS)
   })
+
+  it('retains URL-less data, drops invalid URLs, and reports both classifications', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => jsonResponse({
+      code: 0,
+      message: 'success',
+      request_id: 'req_mixed_urls',
+      data: {
+        results: [
+          { title: 'Web source', url: 'https://source.test/result', content: 'citeable' },
+          { title: 'Finance data', url: '', content: '{"close":1272.75}' },
+          { title: 'Relative URL', url: '/not-absolute', content: 'discarded' },
+          { title: 'Non-HTTP URL', url: 'file:///private', content: 'discarded' },
+        ],
+        metadata: { total_results: 4, search_time_ms: 9 },
+      },
+    })))
+
+    await expect(new AnySearchClient(options).search({ query: 'mixed URLs' })).resolves.toEqual({
+      requestId: 'req_mixed_urls',
+      results: [
+        { title: 'Web source', url: 'https://source.test/result', content: 'citeable' },
+        { title: 'Finance data', content: '{"close":1272.75}' },
+      ],
+      metadata: {
+        totalResults: 4,
+        searchTimeMs: 9,
+        urlLessResults: 1,
+        droppedInvalidUrlResults: 2,
+      },
+    })
+  })
 })
 
 describe('AnySearchClient extract', () => {
