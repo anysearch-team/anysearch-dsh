@@ -41,7 +41,7 @@ npx -y @deepseek-ai/dsh web
 - 通过 Harness 内置的 `web_fetch` 调用 AnySearch Extract，抓取并清洗指定公开 HTTP(S) URL 的正文。
 - 实时发现可搜索领域、垂直分类和支持的参数，再用标签、地区、语言和结构化参数执行高级搜索。
 - 一次并发执行一至五个搜索，单项失败不影响其他结果。
-- 高级搜索可按需返回搜索结果中的清洗正文，支持更深入的研究任务。
+- 高级搜索会保留没有来源 URL 的有效结构化结果；对于带网页来源的结果，可按需返回清洗正文。
 
 ## 可选 API Key
 
@@ -99,7 +99,7 @@ Windows、Linux 和 macOS 使用相同的安装命令。安装前请确保 Node.
 |---|---|---|
 | `apiKeyEnv` | `ANYSEARCH_API_KEY` | DSH 凭据引用；缺失时使用匿名访问 |
 | `baseURL` | `https://api.anysearch.com` | AnySearch API 基础地址 |
-| `maxRenderedContentChars` | `12000` | 单次高级工具调用向模型展示的清洗正文字符上限 |
+| `maxRenderedContentChars` | `12000` | 单次高级工具调用向模型展示的结果正文字符上限 |
 
 ## 管理插件
 

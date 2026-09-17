@@ -62,7 +62,7 @@ POST https://api.anysearch.com/v1/extract
 
 AnySearch 返回的清洗正文映射为 Harness 通用 Fetch 文本，同时保留最终 URL、源站 HTTP 状态和截断标记。
 
-专业检索先使用 `anysearch_capabilities` 获取实时标签，再使用 `anysearch_search` 发送完整字段。高级工具保留请求 ID、耗时和清洗正文。
+专业检索先使用 `anysearch_capabilities` 获取实时标签，再使用 `anysearch_search` 发送完整字段。高级工具保留请求 ID、耗时和清洗正文；对于金融等没有网页来源的结构化结果，会保留数据但不生成 citation source。
 
 ### 优点
 

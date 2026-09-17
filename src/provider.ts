@@ -15,6 +15,7 @@ export const ANYSEARCH_PROVIDER_ID = 'anysearch'
 
 /** Map a validated AnySearch result into the provider-neutral web source. */
 export function mapAnySearchResult(result: AnySearchResult): WebSearchSource {
+  if (result.url === undefined) throw new TypeError('AnySearch web source must have a URL')
   const title = result.title.trim()
   const snippet = result.snippet?.trim()
   return {
@@ -27,9 +28,13 @@ export function mapAnySearchResult(result: AnySearchResult): WebSearchSource {
 /** Map a validated AnySearch response into the provider-neutral result. */
 export function mapAnySearchResponse(response: AnySearchSearchResponse): WebSearchResult {
   return {
-    sources: response.results.map(mapAnySearchResult),
+    sources: response.results.filter(hasSourceURL).map(mapAnySearchResult),
     truncated: false,
   }
+}
+
+function hasSourceURL(result: AnySearchResult): result is AnySearchResult & { url: string } {
+  return result.url !== undefined
 }
 
 /** Search provider backed by the shared AnySearch HTTP client. */

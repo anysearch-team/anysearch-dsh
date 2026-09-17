@@ -208,17 +208,17 @@ https://api.anysearch.com
 
 ## 结果如何进入模型
 
-AnySearch 搜索响应可能包含标题、URL、摘要和清洗正文。当前 Harness 通用 Web Search 接口只接收可移植的来源字段，因此插件只向 `web_search` 返回：
+AnySearch 搜索响应可能包含标题、URL、摘要和清洗正文。当前 Harness 通用 Web Search 接口只接收可引用的来源字段，因此插件只向 `web_search` 返回 URL 为合法绝对 HTTP(S) 地址的：
 
 - `title`
 - `url`
 - `snippet`
 
-完整 `content` 不会进入 `web_search` 结果。这保持了 Harness 通用 Provider 的字段一致性。
+完整 `content` 不会进入 `web_search` 结果。单条空 URL 或非法 URL 会被过滤，不会导致整次普通搜索失败。这保持了 Harness 通用 Provider 的字段一致性。
 
-`anysearch_search` 始终保留请求 ID 和搜索耗时。只有传入 `includeContent: true` 时，结构化结果才保留 `content`；单次搜索所有结果的 `content` 累计最多 200,000 字符，模型文本再展示其中最多 `maxRenderedContentChars` 个字符。未传入 `includeContent` 或传入 `false` 时，结构化结果不持久化正文。
+`anysearch_search` 始终保留请求 ID 和搜索耗时。没有来源 URL 的垂类结构化结果会保留其 `content`，但不会进入 citation sources。对于带 URL 的网页结果，只有传入 `includeContent: true` 时才保留 `content`。单次搜索所有结果的 `content` 累计最多 200,000 字符，模型文本再展示其中最多 `maxRenderedContentChars` 个字符。元数据中的 `urlLessResults` 和 `droppedInvalidUrlResults` 分别记录无来源 URL 的有效结果数和被丢弃的非法 URL 结果数。
 
-`anysearch_batch_search` 对每项应用相同的结构化正文规则。200,000 字符上限按每个独立搜索请求计算；`maxRenderedContentChars` 展示上限由整批共享，不是每项各有一份。
+`anysearch_batch_search` 对每项应用相同的 URL 和正文规则。200,000 字符上限按每个独立搜索请求计算；`maxRenderedContentChars` 展示上限由整批共享，不是每项各有一份。
 
 `web_fetch` 调用 AnySearch `/v1/extract`。AnySearch 返回的 HTML 页面已经转换为可读 Markdown，插件把它作为 DSH `text` 正文返回，并保留最终 URL、源站 2xx 状态和 `truncated`。`web_fetch` 使用 DSH 通用结果，因此不会向模型暴露 AnySearch `request_id`、原始媒体类型或标题。
 
