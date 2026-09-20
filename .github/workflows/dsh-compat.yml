@@ -1,0 +1,45 @@
+name: DSH compatibility
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: '23 3 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dsh-compat-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  compatibility:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.7.0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+      - name: Verify every supported release
+        if: github.event_name != 'schedule'
+        run: node scripts/check-dsh-compat.mjs
+      - name: Discover and check newly published releases
+        if: github.event_name == 'schedule'
+        run: node scripts/check-dsh-compat.mjs --published
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dsh-compatibility
+          path: |
+            ${{ runner.temp }}/anysearch-dsh-compat-*/results.json
+            ${{ runner.temp }}/anysearch-dsh-compat-*/*/*.log
