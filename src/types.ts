@@ -1,3 +1,6 @@
+/** JSON values shared across DSH releases, independent of moved upstream exports. */
+export type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue }
+
 /** Scalar value accepted by AnySearch vertical-search parameters. */
 export type AnySearchParamValue = string | number | boolean
 

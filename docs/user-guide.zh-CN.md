@@ -2,7 +2,7 @@
 
 [English](../README.md) | **简体中文**
 
-适用版本：包含 AnySearch Fetch Provider 的待发布版本
+适用范围：当前源码；DSH 版本矩阵和 npm 发布状态见[兼容性说明](dsh-compatibility.md)。
 
 最后核对：2026-08-17
 
@@ -276,7 +276,7 @@ AnySearch 搜索响应可能包含标题、URL、摘要和清洗正文。当前 
 
 ## 功能边界
 
-本插件当前不提供网页正文提取。API Key 请通过 DSH 管理的凭据文件或环境变量配置；可用功能和调用方式以本仓库发布版本及 AnySearch 公开 API 文档为准。
+网页正文提取通过 Harness 原生 `web_fetch` 提供。API Key 请通过 DSH 管理的凭据文件或环境变量配置；可用功能和调用方式以本仓库发布版本及 AnySearch 公开 API 文档为准。
 
 ## 相关链接
 

@@ -2,7 +2,8 @@
 
 import type { Context } from '@deepseek-ai/cordis'
 import { defineTool } from '@deepseek-ai/dsh-tools'
-import type { GenericCallView, JsonValue } from '@deepseek-ai/dsh-tools'
+import type { GenericCallView } from '@deepseek-ai/dsh-tools'
+import type { JsonValue } from '../types.ts'
 import { AnySearchClientError } from '../client.ts'
 import type { AnySearchClient } from '../client.ts'
 import type { AnySearchMetadata, AnySearchResult, AnySearchSearchRequest } from '../types.ts'

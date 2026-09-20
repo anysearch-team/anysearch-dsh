@@ -118,6 +118,7 @@ npx -y @deepseek-ai/dsh plugin --profile web remove @anysearch/anysearch-dsh
 ## Compatibility and limitations
 
 - DeepSeek Harness is in developer preview and may make compatibility-breaking changes.
+- This source tree covers 20 published DSH releases, from `0.0.1-rc.5` through `0.1.6-alpha.2`, including `0.1.5-rc.2`. See the [version matrix, validation scope, and publication status](docs/dsh-compatibility.md).
 - URL extraction is exposed through Harness's provider-neutral `web_fetch`; the plugin does not add a duplicate `anysearch_extract` tool.
 - Configure the API key through DSH-managed credentials or an environment variable; the DSH settings page does not currently provide a third-party Provider credential field.
 

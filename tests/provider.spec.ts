@@ -19,6 +19,7 @@ import {
 import ToolRuntime from '@deepseek-ai/dsh-tools'
 import WebRuntime from '@deepseek-ai/dsh-web'
 import {
+  ANYSEARCH_DSH_CLIENT_ID,
   ANYSEARCH_FETCH_PROVIDER_ID,
   ANYSEARCH_PROVIDER_ID,
   AnySearchClient,
@@ -151,8 +152,8 @@ describe('AnySearchProvider requests', () => {
     expect(init.headers).toMatchObject({
       authorization: 'Bearer as_sk_test',
       'content-type': 'application/json',
-      'user-agent': 'dsh/0.1.5',
-      'x-anysearch-client': 'dsh/0.1.5',
+      'user-agent': ANYSEARCH_DSH_CLIENT_ID,
+      'x-anysearch-client': ANYSEARCH_DSH_CLIENT_ID,
     })
     expect(JSON.parse(init.body as string)).toEqual({
       query: 'deepseek harness',

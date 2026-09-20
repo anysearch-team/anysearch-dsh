@@ -4,13 +4,13 @@ import type { Context } from '@deepseek-ai/cordis'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import type {
   GenericCallView,
-  JsonValue,
   ToolResult,
   WebSearchResultView,
   WebSource,
 } from '@deepseek-ai/dsh-tools'
 import type { AnySearchClient } from '../client.ts'
 import type {
+  JsonValue,
   AnySearchParamValue,
   AnySearchResult,
   AnySearchSearchRequest,

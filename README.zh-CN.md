@@ -118,6 +118,7 @@ npx -y @deepseek-ai/dsh plugin --profile web remove @anysearch/anysearch-dsh
 ## 兼容性与限制
 
 - DeepSeek Harness 仍处于开发预览阶段，可能发布不兼容变更。
+- 当前源码覆盖从 `0.0.1-rc.5` 到 `0.1.6-alpha.2` 的 20 个已发布 DSH 版本，包括 `0.1.5-rc.2`。具体版本、验证范围和 npm 发布状态见[兼容性说明](docs/dsh-compatibility.md)。
 - 网页提取通过 Harness 原生 `web_fetch` 暴露；插件不会再增加一个重复的 `anysearch_extract` 工具。
 - 请通过 DSH 管理的凭据文件或环境变量配置 API Key；DSH 设置页当前不提供第三方 Provider 凭据输入项。
 
