@@ -1,8 +1,9 @@
 # DSH compatibility
 
 This source tree targets every currently installable published DSH release listed
-below. These changes are not yet published: npm `@anysearch/anysearch-dsh@0.1.5`
-still declares the older peer dependency range reported in issue #12.
+below, including `0.2.0-rc.2`, which was added in response to issue #20. These
+changes are not yet published: npm `@anysearch/anysearch-dsh@0.1.6` still
+declares the older peer dependency range reported in issue #12.
 
 As checked on 2026-09-20, the DSH npm `latest` and `next` tags point to
 `0.1.5-rc.2`; `alpha` points to `0.1.6-alpha.2`. All published DSH versions are
@@ -20,6 +21,7 @@ prereleases. Sources: [npm metadata](https://registry.npmjs.org/@deepseek-ai/dsh
 | 0.1.3 | alpha.2 |
 | 0.1.5 | alpha.1, alpha.2, rc.1, rc.2 |
 | 0.1.6 | alpha.1, alpha.2 |
+| 0.2.0 | rc.2 |
 
 The two earlier releases, `0.0.1-rc.1` and `0.0.1-rc.2`, cannot currently be
 installed with their complete published peer dependency graphs. Their
@@ -27,6 +29,27 @@ installed with their complete published peer dependency graphs. Their
 whose npm registry endpoint returns HTTP 404. They are not claimed as verified
 compatible. An already bundled desktop may contain that dependency, but needs
 separate validation against that actual bundle.
+
+## Adding 0.2.0-rc.2 support
+
+`0.2.0-rc.2` was added after issue #20 reported an install failure on a newer
+runtime. The DSH installer gates on `peerDependencies` alone: it collects the
+components named `@deepseek-ai/dsh` and `@deepseek-ai/dsh-*` from the plugin
+manifest and refuses the install when none of those ranges admits the running
+release. The change set is therefore:
+
+- The five `@deepseek-ai/dsh-*` peer ranges now admit `0.2.0-rc.2`.
+- `devDependencies` pin the matching `0.2.0-rc.2` declarations, so type-checking
+  runs against the real target interfaces rather than older ones.
+- Tests follow two renamed or relocated exports: `CallId` is now `ToolCallId` in
+  `@deepseek-ai/dsh-llm`, and `JsonValue` now comes from
+  `@deepseek-ai/dsh-util-values` instead of `@deepseek-ai/dsh-tools`.
+- The plugin's runtime source needed no change: `applyWebFetchTool`, the web
+  search and fetch provider interfaces, `credentialRef`, and `defineTool` kept
+  their earlier signatures in `0.2.0-rc.2`.
+- The older peer ranges are left untouched, and no `dsh plugin allow-version`
+  exemption is needed or implied: `0.2.0-rc.2` is deliberately declared support,
+  not a forced install.
 
 ## What the checks prove
 
