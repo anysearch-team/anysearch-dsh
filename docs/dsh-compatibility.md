@@ -1,13 +1,22 @@
 # DSH compatibility
 
 This source tree targets every currently installable published DSH release listed
-below. These changes are not yet published: npm `@anysearch/anysearch-dsh@0.1.5`
+below. These changes are not yet published: npm `@anysearch/anysearch-dsh@0.1.6`
 still declares the older peer dependency range reported in issue #12.
 
-As checked on 2026-09-20, the DSH npm `latest` and `next` tags point to
-`0.1.5-rc.2`; `alpha` points to `0.1.6-alpha.2`. All published DSH versions are
+As checked on 2026-10-07, the DSH npm `latest` and `next` tags point to
+`0.1.5-rc.2`; `alpha` points to `0.2.1-alpha.1`. All published DSH versions are
 prereleases. Sources: [npm metadata](https://registry.npmjs.org/@deepseek-ai/dsh),
 [upstream releases](https://github.com/deepseek-ai/deepseek-harness/releases).
+
+The launcher compares a plugin's `@deepseek-ai/dsh` and `@deepseek-ai/dsh-*`
+peer ranges against the running DSH version before it imports the plugin or a
+bundle layer, with prereleases participating in range matching. A range that
+does not admit the running version therefore denies the plugin instead of
+warning about it, which is why each newly published release requires an
+explicit range and a passing matrix run. `@deepseek-ai/cordis` is not part of
+that check because it is versioned independently of DSH; its range only has to
+resolve against the Cordis line the release was built with.
 
 ## Supported release matrix
 
@@ -18,8 +27,11 @@ prereleases. Sources: [npm metadata](https://registry.npmjs.org/@deepseek-ai/dsh
 | 0.1.1 | rc.1, rc.2 |
 | 0.1.2 | alpha.2, alpha.3, alpha.4, alpha.5, rc.1 |
 | 0.1.3 | alpha.2 |
-| 0.1.5 | alpha.1, alpha.2, rc.1, rc.2 |
+| 0.1.5 | alpha.1, alpha.2, rc.1, rc.2, rc.3 |
 | 0.1.6 | alpha.1, alpha.2 |
+| 0.1.7 | alpha.1, alpha.2, rc.1, rc.2 |
+| 0.2.0 | rc.1, rc.2 |
+| 0.2.1 | alpha.1 |
 
 The two earlier releases, `0.0.1-rc.1` and `0.0.1-rc.2`, cannot currently be
 installed with their complete published peer dependency graphs. Their
@@ -32,8 +44,10 @@ separate validation against that actual bundle.
 
 `scripts/check-dsh-compat.mjs` packs the built plugin and creates a fresh temporary
 project for each release. It pins every DSH dependency and peer in the required
-component graph to the requested release, installs with strict peer validation,
-and type-checks the plugin source against those installed declarations.
+component graph to the requested release, pins the independently versioned
+Cordis and Schemastery ranges those components declare, installs with strict
+peer validation, and type-checks the plugin source against those installed
+declarations.
 
 The runtime check uses actual released Cordis, credentials interfaces, system
 prompt, tool registry, web service, and native web tools. It checks:
@@ -56,7 +70,7 @@ pnpm install --frozen-lockfile
 pnpm run test:compat
 
 # Select particular releases:
-pnpm run test:compat 0.1.5-rc.2 0.1.6-alpha.2
+pnpm run test:compat 0.1.5-rc.2 0.2.1-alpha.1
 
 # Check the current registry catalog, excluding the two documented unavailable releases:
 pnpm run test:compat --published

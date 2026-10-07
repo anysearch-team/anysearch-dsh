@@ -6,9 +6,9 @@ import {
   type CredentialRef,
   type ResolvedCredential,
 } from '@deepseek-ai/dsh-credentials'
-import { CallId } from '@deepseek-ai/dsh-llm'
+import { ToolCallId } from '@deepseek-ai/dsh-llm'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
-import ToolRuntime, { type JsonValue, type ToolExecutionResult } from '@deepseek-ai/dsh-tools'
+import ToolRuntime, { type ToolExecutionResult } from '@deepseek-ai/dsh-tools'
 import WebRuntime from '@deepseek-ai/dsh-web'
 import {
   ANYSEARCH_CAPABILITIES_TOOL_NAME,
@@ -17,6 +17,7 @@ import {
   ANYSEARCH_SEARCH_TOOL_NAME,
 } from '../src/index.ts'
 import * as anySearchPlugin from '../src/index.ts'
+import type { JsonValue } from '../src/types.ts'
 import { parseAdvancedSearchArgs } from '../src/tools/search.ts'
 import { ANYSEARCH_TOOL_TIMEOUT_MS } from '../src/limits.ts'
 
@@ -76,7 +77,7 @@ async function mount(config: anySearchPlugin.Config = {}): Promise<{
     ctx,
     fiber,
     call: (name, args, callSignal = signal) => ctx.tools.execute({
-      callId: CallId(`call-${++counter}`),
+      callId: ToolCallId(`call-${++counter}`),
       name,
       arguments: args,
       signal: callSignal,

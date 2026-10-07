@@ -52,8 +52,16 @@ for (const version of versions) {
         const release = (await metadata(name)).versions[version]
         assert.ok(release, `${name}@${version} is not published`)
         dependencies[name] = version
-        for (const dependency of Object.keys({ ...release.dependencies, ...release.peerDependencies })) {
-          if (dependency.startsWith('@deepseek-ai/dsh-') && !dependencies[dependency]) pending.push(dependency)
+        for (const [dependency, range] of Object.entries({ ...release.dependencies, ...release.peerDependencies })) {
+          if (!dependency.startsWith('@deepseek-ai/')) continue
+          if (dependency.startsWith('@deepseek-ai/dsh-')) {
+            if (!dependencies[dependency]) pending.push(dependency)
+          } else if (!dependencies[dependency]) {
+            // Cordis and Schemastery are versioned independently of DSH, so an unpinned
+            // root would resolve a line the release was not built against. Pin the range
+            // the component declares; npm still picks the concrete version.
+            dependencies[dependency] = range
+          }
         }
       }))
     }
