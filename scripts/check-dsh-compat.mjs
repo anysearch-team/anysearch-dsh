@@ -32,7 +32,9 @@ const versions = requested[0] === '--all' ? Object.keys(catalog.versions)
   : requested.length ? requested : matrix.versions
 assert.ok(versions.every(version => /^\d+\.\d+\.\d+(?:-[\w.]+)?$/.test(version)), 'Expected DSH versions')
 const packageInfo = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'))
-const [packed] = JSON.parse(npm(['pack', '--ignore-scripts', '--json'], root))
+// npm <= 11 reports `pack --json` as an array; npm 12 reports an object keyed by package name.
+const packedReport = JSON.parse(npm(['pack', '--ignore-scripts', '--json'], root))
+const [packed] = Array.isArray(packedReport) ? packedReport : Object.values(packedReport)
 const archive = path.join(scratch, packed.filename)
 const results = []
 console.log(`Evidence: ${scratch}`)

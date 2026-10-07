@@ -17,7 +17,9 @@ const packed = spawnSync(command, args, {
 assert.equal(packed.status, 0,
   packed.error?.message || packed.stderr || packed.stdout || 'npm pack --dry-run failed')
 
-const [manifest] = JSON.parse(packed.stdout)
+// npm <= 11 reports `pack --json` as an array; npm 12 reports an object keyed by package name.
+const packedReport = JSON.parse(packed.stdout)
+const [manifest] = Array.isArray(packedReport) ? packedReport : Object.values(packedReport)
 assert.ok(manifest, 'npm pack --dry-run returned no package manifest')
 
 const packagedFiles = new Set(manifest.files.map(file => file.path.replaceAll('\\', '/')))
