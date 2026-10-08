@@ -91,7 +91,7 @@ changes. `pnpm run check` independently compiles into a temporary directory and
 fails on missing, extra, or stale build files; it does not silently repair them.
 
 CI installs both a packed package and a complete temporary Git snapshot into
-fresh DSH Web profiles on Windows and Linux, without compatibility exemptions
+fresh DSH Web profiles on Windows, Linux, and macOS, without compatibility exemptions
 or build allowlists. It checks package entries and both composed providers.
 To repeat with an installed DSH CLI:
 
