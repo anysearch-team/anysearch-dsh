@@ -46,9 +46,9 @@
     "check": "pnpm run check:dist && tsc -p tsconfig.test.json && vitest run && node scripts/check-package.mjs",
     "check:package": "pnpm run check:dist && node scripts/check-package.mjs",
     "test": "vitest run",
-    "test:e2e": "tsc -p tsconfig.json && node scripts/live-e2e.mjs",
+    "test:e2e": "pnpm run check:dist && node scripts/live-e2e.mjs",
     "typecheck": "tsc -p tsconfig.test.json",
-    "test:compat": "pnpm run build && node scripts/check-dsh-compat.mjs",
+    "test:compat": "pnpm run check:dist && node scripts/check-dsh-compat.mjs",
     "check:dist": "node scripts/check-dist.mjs"
   },
   "engines": {

@@ -2,7 +2,8 @@
 
 This source tree supports the explicitly tested DSH releases listed below,
 including `0.2.0-rc.2` and `0.2.1-alpha.1`. It does not claim compatibility
-with untested releases.
+with untested releases. These changes target plugin `0.1.7`; as checked on
+2026-10-08, the public npm package is still `0.1.6` and does not include them.
 
 As checked on 2026-10-08, the DSH npm `latest` and `next` tags point to
 `0.2.0-rc.2`; `alpha` points to `0.2.1-alpha.1`.
@@ -96,6 +97,7 @@ installs do not require pnpm build permission or a local TypeScript compiler.
 After editing source, run `pnpm run build` and include the resulting `lib/`
 changes. `pnpm run check` independently compiles into a temporary directory and
 fails on missing, extra, or stale build files; it does not silently repair them.
+`test:compat` and `test:e2e` enforce the same check before running.
 
 CI installs both a packed package and a complete temporary Git snapshot into
 fresh DSH Web profiles on Windows, Linux, and macOS, without compatibility exemptions
