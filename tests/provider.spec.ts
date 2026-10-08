@@ -9,7 +9,7 @@ import {
   type CredentialRef,
   type ResolvedCredential,
 } from '@deepseek-ai/dsh-credentials'
-import { CallId } from '@deepseek-ai/dsh-llm'
+import { ToolCallId } from '@deepseek-ai/dsh-llm'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import {
   applyWebFetchTool,
@@ -375,7 +375,7 @@ describe('AnySearch plugin registration', () => {
       body: { kind: 'text', content: 'Body' },
     })
     const toolFetch = await ctx.tools.execute({
-      callId: CallId('web-fetch-registration'),
+      callId: ToolCallId('web-fetch-registration'),
       name: 'web_fetch',
       arguments: { url: 'https://example.test/article' },
       signal: new AbortController().signal,

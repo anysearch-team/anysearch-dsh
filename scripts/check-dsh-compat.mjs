@@ -32,7 +32,9 @@ const versions = requested[0] === '--all' ? Object.keys(catalog.versions)
   : requested.length ? requested : matrix.versions
 assert.ok(versions.every(version => /^\d+\.\d+\.\d+(?:-[\w.]+)?$/.test(version)), 'Expected DSH versions')
 const packageInfo = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'))
-const [packed] = JSON.parse(npm(['pack', '--ignore-scripts', '--json'], root))
+// Accept both array and package-keyed npm pack reports.
+const packedReport = JSON.parse(npm(['pack', '--ignore-scripts', '--json'], root))
+const [packed] = Array.isArray(packedReport) ? packedReport : Object.values(packedReport)
 const archive = path.join(scratch, packed.filename)
 const results = []
 console.log(`Evidence: ${scratch}`)
@@ -43,6 +45,11 @@ for (const version of versions) {
   try {
     assert.ok(catalog.versions[version], `Unpublished DSH ${version}`)
     const dependencies = { [packageInfo.name]: `file:${archive.replaceAll('\\', '/')}` }
+    // Use the host's foundation too. Alpha DSH releases can require prerelease
+    // Cordis/Schemastery and matching loader peers instead of npm's stable tags.
+    for (const [name, range] of Object.entries(catalog.versions[version].dependencies ?? {})) {
+      if (/^@deepseek-ai\/(?:cordis|schemastery|cosmokit)(?:-|$)/.test(name)) dependencies[name] = range
+    }
     const pending = [...Object.keys(packageInfo.peerDependencies).filter(name => name.startsWith('@deepseek-ai/dsh-')), '@deepseek-ai/dsh-llm']
     while (pending.length) {
       const names = [...new Set(pending.splice(0))].filter(name => !dependencies[name])

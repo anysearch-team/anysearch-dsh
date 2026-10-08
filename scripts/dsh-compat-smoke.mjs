@@ -39,7 +39,14 @@ try {
   await ctx.plugin(WebRuntime, { searchProvider: 'anysearch', fetchProvider: 'anysearch' })
   await ctx.plugin(Credentials)
   // DSH registers native search; AnySearch fills in fetch only when absent.
-  webTools.applyWebSearchTool(ctx, webTools.WEB_SEARCH_MAX_RESULTS, webTools.DEFAULT_WEB_TOOL_TIMEOUT_MS, webTools.WEB_SEARCH_MAX_QUERIES)
+  // The host signature grew over the preview: (ctx, maxResults, timeoutMs, fetchEnabled)
+  // became (ctx, maxResults, maxQueries, timeoutMs, fetchEnabled).
+  const maxQueries = webTools.WEB_SEARCH_MAX_QUERIES ?? 4
+  if (webTools.applyWebSearchTool.length >= 5) {
+    webTools.applyWebSearchTool(ctx, webTools.WEB_SEARCH_MAX_RESULTS, maxQueries, webTools.DEFAULT_WEB_TOOL_TIMEOUT_MS, false)
+  } else {
+    webTools.applyWebSearchTool(ctx, webTools.WEB_SEARCH_MAX_RESULTS, webTools.DEFAULT_WEB_TOOL_TIMEOUT_MS, false)
+  }
   const fiber = await ctx.plugin(plugin, { baseURL: 'https://api.anysearch.test' })
   const assembly = await ctx.systemPrompt.assemble()
   for (const name of ['web_search', 'web_fetch', 'anysearch_search', 'anysearch_capabilities', 'anysearch_batch_search']) {

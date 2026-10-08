@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict'
 import { Context, Service } from '@deepseek-ai/cordis'
 import { credentialRef } from '@deepseek-ai/dsh-credentials'
-import { CallId } from '@deepseek-ai/dsh-llm'
+import { ToolCallId } from '@deepseek-ai/dsh-llm'
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
 import WebRuntime from '@deepseek-ai/dsh-web'
@@ -89,7 +89,7 @@ const pluginFiber = await ctx.plugin(anySearchPlugin, {
 
 let callCounter = 0
 const call = (name, args, signal = new AbortController().signal) => ctx.tools.execute({
-  callId: CallId(`live-e2e-${++callCounter}`),
+  callId: ToolCallId(`live-e2e-${++callCounter}`),
   name,
   arguments: args,
   signal,

@@ -17,10 +17,20 @@ const packed = spawnSync(command, args, {
 assert.equal(packed.status, 0,
   packed.error?.message || packed.stderr || packed.stdout || 'npm pack --dry-run failed')
 
-const [manifest] = JSON.parse(packed.stdout)
+// Accept both array and package-keyed npm pack reports.
+const packedReport = JSON.parse(packed.stdout)
+const [manifest] = Array.isArray(packedReport) ? packedReport : Object.values(packedReport)
 assert.ok(manifest, 'npm pack --dry-run returned no package manifest')
 
 const packagedFiles = new Set(manifest.files.map(file => file.path.replaceAll('\\', '/')))
+const packageInfo = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'))
+for (const lifecycle of ['preinstall', 'install', 'postinstall', 'prepare', 'prepack', 'prepublish']) {
+  assert.equal(packageInfo.scripts?.[lifecycle], undefined,
+    `${lifecycle} would require build permission during Git installation`)
+}
+for (const entry of [packageInfo.main, packageInfo.types, packageInfo.dsh.bundle.patch.replace(/^\.\//, '')]) {
+  assert.ok(packagedFiles.has(entry), `Package entry is missing: ${entry}`)
+}
 const readmes = ['README.md', 'README.zh-CN.md']
 const localImages = new Set()
 
