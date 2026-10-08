@@ -119,7 +119,9 @@ export interface ResolvedConfig {
   maxRenderedContentChars: number
 }
 
-export const Config: z<Config> = z.object({
+// Let Schemastery infer its version-specific input/default modes. The runtime
+// receives resolved values described by Config, not schema input expressions.
+export const Config = z.object({
   apiKeyEnv: z.string().role('credential-ref').default(DEFAULT_API_KEY_ENV),
   baseURL: z.string(),
   maxRenderedContentChars: z.number().step(1).min(1).default(DEFAULT_MAX_RENDERED_CONTENT_CHARS),

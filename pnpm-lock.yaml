@@ -9,7 +9,7 @@ importers:
   .:
     dependencies:
       '@deepseek-ai/schemastery':
-        specifier: '>=3.18.1-rc.1 <4'
+        specifier: '>=3.18.1-rc.1 <4 || 3.18.5-alpha.1'
         version: 3.18.1-rc.1
     devDependencies:
       '@deepseek-ai/cordis':

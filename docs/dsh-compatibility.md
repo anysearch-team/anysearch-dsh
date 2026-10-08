@@ -1,12 +1,12 @@
 # DSH compatibility
 
-This source tree targets every currently installable published DSH release listed
-below. These changes are not yet published: npm `@anysearch/anysearch-dsh@0.1.5`
-still declares the older peer dependency range reported in issue #12.
+This source tree supports the explicitly tested DSH releases listed below,
+including `0.2.0-rc.2` and `0.2.1-alpha.1`. It does not claim compatibility
+with untested releases.
 
-As checked on 2026-09-20, the DSH npm `latest` and `next` tags point to
-`0.1.5-rc.2`; `alpha` points to `0.1.6-alpha.2`. All published DSH versions are
-prereleases. Sources: [npm metadata](https://registry.npmjs.org/@deepseek-ai/dsh),
+As checked on 2026-10-08, the DSH npm `latest` and `next` tags point to
+`0.2.0-rc.2`; `alpha` points to `0.2.1-alpha.1`.
+Sources: [npm metadata](https://registry.npmjs.org/@deepseek-ai/dsh),
 [upstream releases](https://github.com/deepseek-ai/deepseek-harness/releases).
 
 ## Supported release matrix
@@ -18,8 +18,11 @@ prereleases. Sources: [npm metadata](https://registry.npmjs.org/@deepseek-ai/dsh
 | 0.1.1 | rc.1, rc.2 |
 | 0.1.2 | alpha.2, alpha.3, alpha.4, alpha.5, rc.1 |
 | 0.1.3 | alpha.2 |
-| 0.1.5 | alpha.1, alpha.2, rc.1, rc.2 |
+| 0.1.5 | alpha.1, alpha.2, rc.1, rc.2, rc.3 |
 | 0.1.6 | alpha.1, alpha.2 |
+| 0.1.7 | alpha.1, alpha.2, rc.1, rc.2 |
+| 0.2.0 | rc.1, rc.2 |
+| 0.2.1 | alpha.1 |
 
 The two earlier releases, `0.0.1-rc.1` and `0.0.1-rc.2`, cannot currently be
 installed with their complete published peer dependency graphs. Their
@@ -32,7 +35,8 @@ separate validation against that actual bundle.
 
 `scripts/check-dsh-compat.mjs` packs the built plugin and creates a fresh temporary
 project for each release. It pins every DSH dependency and peer in the required
-component graph to the requested release, installs with strict peer validation,
+component graph to the requested release, uses the host's declared Cordis and
+Schemastery dependencies (including prereleases), installs with strict peer validation,
 and type-checks the plugin source against those installed declarations.
 
 The runtime check uses actual released Cordis, credentials interfaces, system
@@ -56,7 +60,7 @@ pnpm install --frozen-lockfile
 pnpm run test:compat
 
 # Select particular releases:
-pnpm run test:compat 0.1.5-rc.2 0.1.6-alpha.2
+pnpm run test:compat 0.1.0-rc.6 0.2.0-rc.2 0.2.1-alpha.1
 
 # Check the current registry catalog, excluding the two documented unavailable releases:
 pnpm run test:compat --published
@@ -76,6 +80,28 @@ ranges or interface changes visible as failures. Future releases require passing
 the matrix and updating the peer ranges and version list before being advertised
 as supported. Prerelease ranges are explicit because a broad numeric range does
 not automatically admit every prerelease series.
+
+## Git and package installation
+
+The repository includes the compiled JavaScript and declarations in `lib/`.
+Installation runs no `prepare`, `prepack`, or install lifecycle scripts, so Git
+installs do not require pnpm build permission or a local TypeScript compiler.
+After editing source, run `pnpm run build` and include the resulting `lib/`
+changes. `pnpm run check` independently compiles into a temporary directory and
+fails on missing, extra, or stale build files; it does not silently repair them.
+
+CI installs both a packed package and a complete temporary Git snapshot into
+fresh DSH Web profiles on Windows and Linux, without compatibility exemptions
+or build allowlists. It checks package entries and both composed providers.
+To repeat with an installed DSH CLI:
+
+```sh
+node scripts/check-dsh-install.mjs /path/to/node_modules/@deepseek-ai/dsh/lib/bin.js
+```
+
+This installation check does not contact the AnySearch API or run a model.
+The Web profile composes native `web_search` per agent preset; its absence
+from the global registry alone does not mean that search is unavailable.
 
 ## Desktop versions and issue #12
 

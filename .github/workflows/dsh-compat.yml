@@ -29,7 +29,7 @@ jobs:
           node-version: '24'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run build
+      - run: pnpm run check:dist
       - name: Verify every supported release
         if: github.event_name != 'schedule'
         run: node scripts/check-dsh-compat.mjs
@@ -43,3 +43,32 @@ jobs:
           path: |
             ${{ runner.temp }}/anysearch-dsh-compat-*/results.json
             ${{ runner.temp }}/anysearch-dsh-compat-*/*/*.log
+
+  installation:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        dsh: ['0.2.0-rc.2', '0.2.1-alpha.1']
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.7.0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Install the tested DSH CLI
+        shell: bash
+        run: npm install --prefix "$RUNNER_TEMP/dsh-cli" --registry=https://registry.npmjs.org @deepseek-ai/dsh@${{ matrix.dsh }}
+      - name: Install package and Git snapshot without exemptions
+        shell: bash
+        run: node scripts/check-dsh-install.mjs "$RUNNER_TEMP/dsh-cli/node_modules/@deepseek-ai/dsh/lib/bin.js"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dsh-installation-${{ matrix.os }}-${{ matrix.dsh }}
+          path: |
+            ${{ runner.temp }}/anysearch-dsh-install-*/results.json
+            ${{ runner.temp }}/anysearch-dsh-install-*/*/*.log
