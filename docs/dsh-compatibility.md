@@ -9,6 +9,10 @@ As checked on 2026-10-08, the DSH npm `latest` and `next` tags point to
 Sources: [npm metadata](https://registry.npmjs.org/@deepseek-ai/dsh),
 [upstream releases](https://github.com/deepseek-ai/deepseek-harness/releases).
 
+The DSH launcher checks component peer ranges before importing a plugin or its
+bundle. An unsupported running version blocks loading rather than merely issuing
+a warning. Independently versioned Cordis is resolved separately.
+
 ## Supported release matrix
 
 | Release line | Tested versions |
@@ -51,7 +55,10 @@ prompt, tool registry, web service, and native web tools. It checks:
 
 HTTP responses use deterministic fixtures. This is a released-component
 integration check, not a live AnySearch API, desktop application, or model-driven
-Agent E2E test. The ordinary unit suite remains part of `pnpm run check`.
+Agent E2E test. The ordinary unit suite remains part of `pnpm run check` and uses
+DSH `0.2.1-alpha.1` as its development baseline. The matrix continues to check
+older releases. Native search registration adapts to the older and newer
+parameter signatures, including query limits and timeouts.
 
 ## Run the checks
 

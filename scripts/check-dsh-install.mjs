@@ -23,7 +23,9 @@ function npm(args) {
       { npm_config_pack_destination: scratch })
     : run('npm', args, root, { npm_config_pack_destination: scratch })
 }
-const [packed] = JSON.parse(npm(['pack', '--ignore-scripts', '--json']))
+// Accept both array and package-keyed npm pack reports.
+const packedReport = JSON.parse(npm(['pack', '--ignore-scripts', '--json']))
+const [packed] = Array.isArray(packedReport) ? packedReport : Object.values(packedReport)
 const fixture = path.join(scratch, 'git-fixture')
 await mkdir(fixture)
 const tracked = run('git', ['ls-files', '-z'], root).split('\0').filter(Boolean)
