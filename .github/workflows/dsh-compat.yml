@@ -48,7 +48,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        dsh: ['0.2.0-rc.2', '0.2.1-alpha.1']
+        dsh: ['0.2.0-rc.2', '0.2.1-alpha.1', '0.2.1-alpha.2']
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     steps:

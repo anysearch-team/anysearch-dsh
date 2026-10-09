@@ -1,12 +1,12 @@
 # DSH compatibility
 
 This source tree supports the explicitly tested DSH releases listed below,
-including `0.2.0-rc.2` and `0.2.1-alpha.1`. It does not claim compatibility
-with untested releases. These changes target plugin `0.1.7`; as checked on
-2026-10-08, the public npm package is still `0.1.6` and does not include them.
+including `0.2.0-rc.2` and `0.2.1-alpha.2`. It does not claim compatibility
+with untested releases. These changes target plugin `0.1.8`; as checked on
+2026-10-09, the public npm package is still `0.1.7` and does not include them.
 
-As checked on 2026-10-08, the DSH npm `latest` and `next` tags point to
-`0.2.0-rc.2`; `alpha` points to `0.2.1-alpha.1`.
+As checked on 2026-10-09, the DSH npm `latest` and `next` tags point to
+`0.2.0-rc.2`; `alpha` points to `0.2.1-alpha.2`.
 Sources: [npm metadata](https://registry.npmjs.org/@deepseek-ai/dsh),
 [upstream releases](https://github.com/deepseek-ai/deepseek-harness/releases).
 
@@ -27,7 +27,7 @@ a warning. Independently versioned Cordis is resolved separately.
 | 0.1.6 | alpha.1, alpha.2 |
 | 0.1.7 | alpha.1, alpha.2, rc.1, rc.2 |
 | 0.2.0 | rc.1, rc.2 |
-| 0.2.1 | alpha.1 |
+| 0.2.1 | alpha.1, alpha.2 |
 
 The two earlier releases, `0.0.1-rc.1` and `0.0.1-rc.2`, cannot currently be
 installed with their complete published peer dependency graphs. Their
@@ -57,7 +57,7 @@ prompt, tool registry, web service, and native web tools. It checks:
 HTTP responses use deterministic fixtures. This is a released-component
 integration check, not a live AnySearch API, desktop application, or model-driven
 Agent E2E test. The ordinary unit suite remains part of `pnpm run check` and uses
-DSH `0.2.1-alpha.1` as its development baseline. The matrix continues to check
+DSH `0.2.1-alpha.2` as its development baseline. The matrix continues to check
 older releases. Native search registration adapts to the older and newer
 parameter signatures, including query limits and timeouts.
 
@@ -68,7 +68,7 @@ pnpm install --frozen-lockfile
 pnpm run test:compat
 
 # Select particular releases:
-pnpm run test:compat 0.1.0-rc.6 0.2.0-rc.2 0.2.1-alpha.1
+pnpm run test:compat 0.1.0-rc.6 0.2.0-rc.2 0.2.1-alpha.2
 
 # Check the current registry catalog, excluding the two documented unavailable releases:
 pnpm run test:compat --published

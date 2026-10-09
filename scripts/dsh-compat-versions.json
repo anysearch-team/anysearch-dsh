@@ -27,7 +27,8 @@
     "0.1.7-rc.2",
     "0.2.0-rc.1",
     "0.2.0-rc.2",
-    "0.2.1-alpha.1"
+    "0.2.1-alpha.1",
+    "0.2.1-alpha.2"
   ],
   "unavailable": {
     "0.0.1-rc.1": "Published dependency graph requires @deepseek-ai/dsh-type-meta, which returns npm HTTP 404.",
