@@ -43,7 +43,8 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "check": "pnpm run check:dist && tsc -p tsconfig.test.json && vitest run && node scripts/check-package.mjs",
+    "check": "pnpm run check:dist && pnpm run check:declarations && tsc -p tsconfig.test.json && vitest run && node scripts/check-package.mjs",
+    "check:declarations": "node scripts/check-dsh-compat-declarations.mjs",
     "check:package": "pnpm run check:dist && node scripts/check-package.mjs",
     "test": "vitest run",
     "test:e2e": "pnpm run check:dist && node scripts/live-e2e.mjs",

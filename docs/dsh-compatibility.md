@@ -1,14 +1,14 @@
 # DSH compatibility
 
-This source tree supports the explicitly tested DSH releases listed below,
-including `0.2.0-rc.2` and `0.2.1-alpha.2`. It does not claim compatibility
-with untested releases. These changes target plugin `0.1.8`; as checked on
-2026-10-09, the public npm package is still `0.1.7` and does not include them.
-
-As checked on 2026-10-09, the DSH npm `latest` and `next` tags point to
-`0.2.0-rc.2`; `alpha` points to `0.2.1-alpha.2`.
-Sources: [npm metadata](https://registry.npmjs.org/@deepseek-ai/dsh),
-[upstream releases](https://github.com/deepseek-ai/deepseek-harness/releases).
+<!-- dsh-summary:begin -->
+This source tree supports the 29 explicitly tested DSH releases listed
+below, from `0.0.1-rc.5` through `0.2.1-alpha.2`, and does not claim
+compatibility with untested releases.
+These changes target plugin `0.1.8`.
+See [npm metadata](https://registry.npmjs.org/@deepseek-ai/dsh) and
+[upstream releases](https://github.com/deepseek-ai/deepseek-harness/releases)
+for the currently published releases.
+<!-- dsh-summary:end -->
 
 The DSH launcher checks component peer ranges before importing a plugin or its
 bundle. An unsupported running version blocks loading rather than merely issuing
@@ -16,6 +16,7 @@ a warning. Independently versioned Cordis is resolved separately.
 
 ## Supported release matrix
 
+<!-- dsh-matrix:begin -->
 | Release line | Tested versions |
 | --- | --- |
 | 0.0.1 | rc.5 |
@@ -28,6 +29,7 @@ a warning. Independently versioned Cordis is resolved separately.
 | 0.1.7 | alpha.1, alpha.2, rc.1, rc.2 |
 | 0.2.0 | rc.1, rc.2 |
 | 0.2.1 | alpha.1, alpha.2 |
+<!-- dsh-matrix:end -->
 
 The two earlier releases, `0.0.1-rc.1` and `0.0.1-rc.2`, cannot currently be
 installed with their complete published peer dependency graphs. Their
@@ -88,6 +90,37 @@ ranges or interface changes visible as failures. Future releases require passing
 the matrix and updating the peer ranges and version list before being advertised
 as supported. Prerelease ranges are explicit because a broad numeric range does
 not automatically admit every prerelease series.
+
+## Automated follow-up
+
+`scripts/dsh-compat-versions.json` is the single source of truth. The declared
+peer ranges, the release matrix above, the summary at the top, and the README
+coverage line are all generated from it by `scripts/update-dsh-compat.mjs`, and
+`scripts/check-dsh-compat-declarations.mjs` — part of `pnpm run check` — fails
+when any generated value drifts from the list.
+
+The `DSH release follow` workflow runs daily. It lists published DSH releases
+that are not supported yet, adds them, rebuilds the distribution, runs
+`pnpm run check` and the released-component matrix for the added releases, and
+opens a pull request with the result. When the update cannot be verified it
+opens an issue instead, because that means a real interface change rather than a
+mechanical range bump.
+
+Applying the same update by hand:
+
+```sh
+# Published but unsupported releases:
+node scripts/update-dsh-compat.mjs --check
+
+# Add one or more releases, then rebuild and verify:
+node scripts/update-dsh-compat.mjs 0.2.2-alpha.1
+pnpm install && pnpm run build && pnpm run check
+```
+
+The job opens the pull request with `GITHUB_TOKEN`, which GitHub does not use to
+start further workflow runs. The job therefore runs the full check itself and
+records the evidence in the pull request; the repository setting that allows
+GitHub Actions to create pull requests must be enabled.
 
 ## Git and package installation
 

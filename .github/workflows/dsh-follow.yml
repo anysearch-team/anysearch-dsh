@@ -1,0 +1,170 @@
+name: DSH release follow
+
+# A DSH release that is missing from the plugin's peer ranges stops the plugin
+# from loading, without a warning. This job discovers such releases, applies the
+# mechanical compatibility update, verifies it against the released components,
+# and proposes the result as a pull request. When verification fails it reports
+# an issue instead, because that means a real interface change needs review.
+#
+# This workflow runs in this repository: it pushes a branch here and opens the
+# pull request here.
+#
+# Everything uses GITHUB_TOKEN, so the repository setting "Allow GitHub Actions
+# to create and approve pull requests" must be enabled. GitHub does not start
+# workflow runs from a GITHUB_TOKEN-created pull request, so this job runs the
+# full check itself and records the evidence in the pull request.
+
+on:
+  schedule:
+    - cron: '23 2 * * *'
+  workflow_dispatch:
+    inputs:
+      versions:
+        description: Space-separated DSH versions to add (defaults to auto-detection)
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: dsh-release-follow
+  cancel-in-progress: false
+
+jobs:
+  follow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      REQUESTED: ${{ inputs.versions }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.7.0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Discover published DSH releases that are not supported yet
+        id: detect
+        run: |
+          versions="${REQUESTED:-$(node scripts/update-dsh-compat.mjs --check | tr '\n' ' ')}"
+          versions="$(echo "$versions" | xargs)"
+          # The value reaches the shell unquoted in later steps, so keep it to a
+          # plain space-separated version list.
+          if [ -n "$versions" ] && ! echo "$versions" | grep -Eq '^[0-9A-Za-z.+-]+( [0-9A-Za-z.+-]+)*$'; then
+            echo "Unexpected version list: $versions" >&2
+            exit 1
+          fi
+          echo "versions=$versions" >> "$GITHUB_OUTPUT"
+          if [ -n "$versions" ]; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            echo "No unsupported DSH release found." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Apply the compatibility update
+        id: apply
+        if: steps.detect.outputs.found == 'true'
+        continue-on-error: true
+        env:
+          VERSIONS: ${{ steps.detect.outputs.versions }}
+        run: |
+          set -e
+          node scripts/update-dsh-compat.mjs $VERSIONS
+          # pnpm owns pnpm-workspace.yaml: the plain install resolves the new
+          # release and records the minimum-release-age exemptions it needs, and
+          # the frozen install then proves those exemptions satisfy the policy.
+          # The frozen install deliberately never writes them itself.
+          pnpm install
+          pnpm install --frozen-lockfile
+          pnpm run build
+
+      - name: Verify the candidate against the released components
+        id: verify
+        if: steps.detect.outputs.found == 'true' && steps.apply.outcome == 'success'
+        continue-on-error: true
+        env:
+          VERSIONS: ${{ steps.detect.outputs.versions }}
+        run: |
+          set -o pipefail
+          {
+            pnpm run check
+            node scripts/check-dsh-compat.mjs $VERSIONS
+          } 2>&1 | tee follow.log
+
+      - name: Open or refresh the compatibility pull request
+        if: steps.verify.outcome == 'success'
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # A fixed branch keeps this idempotent: the release stays unsupported
+          # on the default branch until the pull request merges, so later runs
+          # rediscover it and update the same pull request.
+          branch: dsh-release-follow
+          base: ${{ github.event.repository.default_branch }}
+          commit-message: 'fix: support DSH ${{ steps.detect.outputs.versions }}'
+          title: 'fix: support DSH ${{ steps.detect.outputs.versions }}'
+          body: |
+            This release was published on npm and is missing from the declared peer ranges, which stops the plugin from loading on that host.
+
+            The compatibility declarations are generated from `scripts/dsh-compat-versions.json`, so this pull request only adds the new release and rebuilds the distribution.
+
+            Verified in the DSH release follow workflow with:
+            - `pnpm run check`
+            - `node scripts/check-dsh-compat.mjs ${{ steps.detect.outputs.versions }}` (released-component install, type check, and runtime smoke test)
+
+            New DSH releases: `${{ steps.detect.outputs.versions }}`
+
+      - name: Report a candidate that could not be verified
+        if: steps.detect.outputs.found == 'true' && steps.verify.outcome != 'success'
+        uses: actions/github-script@v9
+        env:
+          VERSIONS: ${{ steps.detect.outputs.versions }}
+          APPLY_OUTCOME: ${{ steps.apply.outcome }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs')
+            const versions = process.env.VERSIONS
+            const title = `DSH ${versions} could not be verified automatically`
+            const cause = process.env.APPLY_OUTCOME === 'success'
+              ? 'The update applied, but the verification failed. This usually means a real interface change needs a code review rather than a mechanical update.'
+              : 'The compatibility update itself failed, which usually means the release is not installable for every declared component package.'
+            let log = 'No verification log was produced.'
+            try {
+              log = fs.readFileSync('follow.log', 'utf8').split('\n').slice(-80).join('\n')
+            } catch {}
+            const body = [
+              `The DSH release follow job could not verify support for \`${versions}\`.`,
+              '',
+              cause,
+              '',
+              'Reproduce locally with `node scripts/update-dsh-compat.mjs <version>` followed by `pnpm run check` and `node scripts/check-dsh-compat.mjs <version>`.',
+              '',
+              '```',
+              log,
+              '```',
+            ].join('\n')
+            const { owner, repo } = context.repo
+            // The release stays unsupported, so every later run rediscovers it.
+            // Update the open report rather than filing a new one each day.
+            const issues = await github.paginate(github.rest.issues.listForRepo, { owner, repo, state: 'open', per_page: 100 })
+            const existing = issues.find((issue) => issue.title === title)
+            if (existing) {
+              await github.rest.issues.update({ owner, repo, issue_number: existing.number, body })
+              core.info(`Updated issue #${existing.number} for ${versions}.`)
+            } else {
+              const created = await github.rest.issues.create({ owner, repo, title, body })
+              core.info(`Opened issue #${created.data.number} for ${versions}.`)
+            }
+            core.setFailed(title)
