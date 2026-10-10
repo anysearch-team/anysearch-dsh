@@ -1,20 +1,25 @@
 # DSH compatibility
 
-This source tree supports the explicitly tested DSH releases listed below,
-including `0.2.0-rc.2` and `0.2.1-alpha.1`. It does not claim compatibility
-with untested releases. These changes target plugin `0.1.7`; as checked on
-2026-10-08, the public npm package is still `0.1.6` and does not include them.
+This plugin allows new DSH versions by default through wildcard (`*`) DSH peer
+dependencies. The matrix below records tested releases, not an installation
+allowlist. Untested releases are allowed but are not verified compatible.
+These changes target plugin `0.1.8`. The npm release `0.1.7` still uses
+explicit DSH peer ranges and does not include this change.
 
 As checked on 2026-10-08, the DSH npm `latest` and `next` tags point to
 `0.2.0-rc.2`; `alpha` points to `0.2.1-alpha.1`.
 Sources: [npm metadata](https://registry.npmjs.org/@deepseek-ai/dsh),
 [upstream releases](https://github.com/deepseek-ai/deepseek-harness/releases).
 
-The DSH launcher checks component peer ranges before importing a plugin or its
-bundle. An unsupported running version blocks loading rather than merely issuing
-a warning. Independently versioned Cordis is resolved separately.
+The DSH launcher checks DSH peer ranges before importing a plugin or its bundle.
+The published `0.2.0-rc.2` and `0.2.1-alpha.1` launchers include prereleases in
+that check, so `*` accepts stable, alpha, and rc versions without a version
+exemption. Future DSH releases do not require a manifest update solely for their
+version number, provided this upstream check remains unchanged. Independently
+versioned Cordis retains its own range; development dependencies stay pinned.
+Actual API changes can still require a plugin fix.
 
-## Supported release matrix
+## Tested release matrix
 
 | Release line | Tested versions |
 | --- | --- |
@@ -82,12 +87,12 @@ list, per-version logs, dependency manifests, lockfiles, and installed packages.
 Any failed version produces a nonzero exit code. A failed install or unavailable
 dependency is not recorded as a successful runtime check.
 
-CI checks the complete supported matrix for pushes and pull requests. A weekly
-scheduled run discovers newly published versions, making unsupported version
-ranges or interface changes visible as failures. Future releases require passing
-the matrix and updating the peer ranges and version list before being advertised
-as supported. Prerelease ranges are explicit because a broad numeric range does
-not automatically admit every prerelease series.
+CI checks the complete tested matrix for pushes and pull requests. A weekly
+scheduled run discovers newly published versions and checks installation, types,
+and runtime behavior. Failures are investigated as compatibility issues; new DSH
+version numbers alone do not require changing the wildcard peer ranges. Add
+releases to the tested matrix after validation passes. Users can report runtime
+breakage through the repository issues.
 
 ## Git and package installation
 
