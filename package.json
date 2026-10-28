@@ -1,6 +1,6 @@
 {
   "name": "@anysearch/anysearch-dsh",
-  "version": "0.1.8",
+  "version": "0.2.1",
   "description": "AnySearch web search and fetch providers plus advanced tools for DeepSeek Harness",
   "keywords": [
     "anysearch",
@@ -20,7 +20,10 @@
   "license": "MIT",
   "author": "AnySearch Team",
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "./lib/row-page.js"
+  ],
+  "icon": "./icon.svg",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "exports": {
@@ -29,6 +32,9 @@
       "import": "./lib/index.js",
       "default": "./lib/index.js"
     },
+    "./client": "./lib/row-page.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./locale/*.json": "./locale/*.json",
     "./package.json": "./package.json"
   },
   "files": [
@@ -37,12 +43,14 @@
     "cordis.patch.yml",
     "docs/**/*.md",
     "docs/assets/**/*",
+    "icon.svg",
+    "locale",
     "README.md",
     "README.zh-CN.md",
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && node scripts/build-client.mjs",
     "check": "pnpm run check:dist && tsc -p tsconfig.test.json && vitest run && node scripts/check-package.mjs",
     "check:package": "pnpm run check:dist && node scripts/check-package.mjs",
     "test": "vitest run",
@@ -62,6 +70,14 @@
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-plugin-manager",
+        "@deepseek-ai/dsh-api-remotes"
+      ]
     }
   },
   "peerDependencies": {
@@ -73,7 +89,7 @@
     "@deepseek-ai/dsh-web": "*"
   },
   "dependencies": {
-    "@deepseek-ai/schemastery": ">=3.18.1-rc.1 <4 || 3.18.5-alpha.1"
+    "@deepseek-ai/schemastery": "^3.18.5"
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "4.0.5-alpha.1",

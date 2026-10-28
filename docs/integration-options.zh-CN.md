@@ -1,6 +1,6 @@
 # AnySearch DSH 插件与 Skill、MCP、HTTP 接入方式对比
 
-最后核对：2026-08-17
+最后核对：2026-10-28
 
 ## 先说结论
 
@@ -33,7 +33,7 @@
 | 跨 Agent/客户端复用 | 限于 DSH | 较好 | 支持 MCP 的客户端 | 取决于自研封装 |
 | 协议层 | HTTP `/v1/search`、`/v1/extract` 和能力目录 | 当前 CLI 包装 `/mcp` JSON-RPC | Streamable HTTP MCP | 普通 HTTP JSON |
 
-表中的 DSH 插件能力以包含 AnySearch Fetch Provider 的待发布源码和公开 HTTP Extract 契约为准。
+表中的 DSH 插件能力以当前源码（插件 `0.2.0`，含 AnySearch Fetch Provider）和公开 HTTP Extract 契约为准。
 
 ## 一、DSH 插件
 
@@ -72,13 +72,14 @@ AnySearch 返回的清洗正文映射为 Harness 通用 Fetch 文本，同时保
 - 插件配置只保存 `ANYSEARCH_API_KEY` 引用，真实值由 DSH credentials Provider 解析；
 - 每次操作重新解析一次凭据，受管文件中的 Key 轮换在下一次调用生效；
 - 请求取消、错误和插件生命周期遵循 Harness 机制；
+- 插件详情页直接显示原生 `web_search` 和 `web_fetch` 当前解析到的 provider，并可在 AnySearch 与原生 Search API 组合之间一键双向切换；
 - 已提供 AnySearch 专属结构化搜索工具，同时保留默认 `web_search` 和 `web_fetch`。
 
 ### 当前限制
 
 - 通用 `web_search` 仍只开放 `query` 和结果数量；
 - 清洗正文和完整元数据需要使用 `anysearch_search`；
-- 当前 DSH Web 设置页不会自动为第三方 Provider 生成 AnySearch Key 输入框，需要使用 DSH 受管凭据文件或环境变量；
+- 密钥既可在插件自己的行页面（插件 → `@anysearch/anysearch-dsh` → `web-search-anysearch` → 配置）写入，也可使用 DSH 受管凭据文件或环境变量；
 - 只适用于 DeepSeek Harness。
 
 ### 适合谁

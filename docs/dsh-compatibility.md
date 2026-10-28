@@ -3,11 +3,21 @@
 This plugin allows new DSH versions by default through wildcard (`*`) DSH peer
 dependencies. The matrix below records tested releases, not an installation
 allowlist. Untested releases are allowed but are not verified compatible.
-These changes target plugin `0.1.8`. The npm release `0.1.7` still uses
-explicit DSH peer ranges and does not include this change.
+This source tree is plugin `0.2.0`, which adds the Client half: the API-key row
+page and the native-provider card. The wildcard (`*`) DSH peer ranges this
+matrix describes shipped in the published `0.1.8`; `0.1.7` and earlier used
+explicit ranges and predate that change.
 
-As checked on 2026-10-08, the DSH npm `latest` and `next` tags point to
-`0.2.0-rc.2`; `alpha` points to `0.2.1-alpha.1`.
+The tested matrix tracks the DSH tags on
+[GitHub](https://github.com/deepseek-ai/deepseek-harness/tags). As checked on
+2026-10-28, the newest two are `0.2.1-rc.4` (published 2026-10-26) and
+`0.2.2-alpha.2` (published 2026-10-27); npm's `next` tag points at the former,
+`alpha` at the latter, and `latest` remains `0.2.1-rc.2`. `0.2.1-rc.4` passed
+this gate and is part of the matrix. `0.2.2-alpha.2` is not: it moves the
+foundation packages to Cordis `4.0.6-alpha.1` and Schemastery
+`3.18.6-alpha.1`, outside the ranges this plugin declares, so a strict install
+refuses the peer set before any code runs. The matrix file records it as
+unavailable for that reason; drop the entry once those ranges admit it.
 Sources: [npm metadata](https://registry.npmjs.org/@deepseek-ai/dsh),
 [upstream releases](https://github.com/deepseek-ai/deepseek-harness/releases).
 
@@ -32,14 +42,16 @@ Actual API changes can still require a plugin fix.
 | 0.1.6 | alpha.1, alpha.2 |
 | 0.1.7 | alpha.1, alpha.2, rc.1, rc.2 |
 | 0.2.0 | rc.1, rc.2 |
-| 0.2.1 | alpha.1 |
+| 0.2.1 | alpha.1, rc.1, rc.2, rc.3, rc.4 |
 
-The two earlier releases, `0.0.1-rc.1` and `0.0.1-rc.2`, cannot currently be
+The two earliest releases, `0.0.1-rc.1` and `0.0.1-rc.2`, cannot currently be
 installed with their complete published peer dependency graphs. Their
 `dsh-agent` and `dsh-session` packages require `@deepseek-ai/dsh-type-meta`,
 whose npm registry endpoint returns HTTP 404. They are not claimed as verified
 compatible. An already bundled desktop may contain that dependency, but needs
-separate validation against that actual bundle.
+separate validation against that actual bundle. `0.2.2-alpha.2` is excluded
+from discovery for the foundation-range reason described above, not because
+its dependency graph is incomplete.
 
 ## What the checks prove
 
@@ -75,7 +87,7 @@ pnpm run test:compat
 # Select particular releases:
 pnpm run test:compat 0.1.0-rc.6 0.2.0-rc.2 0.2.1-alpha.1
 
-# Check the current registry catalog, excluding the two documented unavailable releases:
+# Check the current registry catalog, excluding the documented unavailable releases:
 pnpm run test:compat --published
 
 # Audit all historical releases, including the two expected installation failures:

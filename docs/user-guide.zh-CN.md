@@ -4,7 +4,7 @@
 
 适用范围：当前源码；DSH 版本矩阵和 npm 发布状态见[兼容性说明](dsh-compatibility.md)。
 
-最后核对：2026-08-17
+最后核对：2026-10-28
 
 ## 这是什么
 
@@ -112,7 +112,7 @@ npx -y @deepseek-ai/dsh --profile web
 
 匿名请求受共享免费额度和更低限流约束。
 
-当前 DSH Web 设置页不会自动为第三方 Provider 生成 AnySearch Key 输入框，因此请使用受管凭据文件或环境变量。插件需要 profile 提供标准 `credentials` 服务；官方 base profile 已包含该服务。
+在 DSH 的 **插件 → `@anysearch/anysearch-dsh` → `web-search-anysearch` → 配置** 里可以直接写入 Key：该页把 Key 写进受管凭据文件（不写配置文件），引用名取自该行自己的 `apiKeyEnv`（默认 `ANYSEARCH_API_KEY`），改引用它会跟着走。也可以改用受管凭据文件或环境变量。插件需要 profile 提供标准 `credentials` 服务；官方 base profile 已包含该服务。
 
 ## 开始使用
 
@@ -162,7 +162,9 @@ anysearch_batch_search
 
 ## 如何确认请求正在使用 AnySearch
 
-先检查最终配置：
+最直接的方式是打开 **插件 → `@anysearch/anysearch-dsh`**，进入该插件的详情页：其中的「原生搜索源」卡片会显示原生 `web_search` 和 `web_fetch` 当前解析到的 provider，并标明这个值来自 bundle 默认还是本 profile 的补丁覆盖。卡片右侧提供一个按钮，可以在 AnySearch 和原生 Search API 组合之间双向切换；这两个字段是 volatile，切换后下一次搜索即生效，无需重启。
+
+命令行下也可以直接检查最终配置：
 
 ```bash
 npx -y @deepseek-ai/dsh --profile web --dump-config
@@ -276,7 +278,7 @@ AnySearch 搜索响应可能包含标题、URL、摘要和清洗正文。当前 
 
 ## 功能边界
 
-网页正文提取通过 Harness 原生 `web_fetch` 提供。API Key 请通过 DSH 管理的凭据文件或环境变量配置；可用功能和调用方式以本仓库发布版本及 AnySearch 公开 API 文档为准。
+网页正文提取通过 Harness 原生 `web_fetch` 提供。API Key 可以在插件行页面直接写入（写入 DSH 受管凭据文件，不写配置文件），也可以改用受管凭据文件或启动环境变量；可用功能和调用方式以本仓库发布版本及 AnySearch 公开 API 文档为准。
 
 ## 相关链接
 

@@ -49,7 +49,11 @@ npx -y @deepseek-ai/dsh web
 
 注册 AnySearch 账号并配置 API Key 后，可获得每天 1000 次免费搜索调用额度。
 
-访问 [anysearch.com](https://anysearch.com) 注册并登录，然后前往 [API Keys](https://www.anysearch.com/console/api-keys) 获取。获取后，将凭据写入 `$DSH_HOME/.credentials.yaml`，默认位置是 `~/.dsh/.credentials.yaml`：
+访问 [anysearch.com](https://anysearch.com) 注册并登录，然后前往 [API Keys](https://www.anysearch.com/console/api-keys) 获取。获取后有两种写入方式。
+
+**从界面写入（推荐）：** 打开 **插件 → `@anysearch/anysearch-dsh` → `web-search-anysearch` → 配置**，把 Key 粘贴进 API Key 输入框。该页会把 Key 写入 DSH 的受管凭据文件——不会写进任何配置文件——写入的引用名就是该行自己配置的 `apiKeyEnv`（默认 `ANYSEARCH_API_KEY`），改动这个引用它会跟着走。清除也在同一页完成。
+
+**从文件写入：** 将凭据写入 `$DSH_HOME/.credentials.yaml`，默认位置是 `~/.dsh/.credentials.yaml`：
 
 ```yaml
 ANYSEARCH_API_KEY: "as_sk_your_key"
@@ -118,10 +122,11 @@ npx -y @deepseek-ai/dsh plugin --profile web remove @anysearch/anysearch-dsh
 ## 兼容性与限制
 
 - DeepSeek Harness 仍处于开发预览阶段，可能发布不兼容变更。
-- 当前源码覆盖从 `0.0.1-rc.5` 到 `0.2.1-alpha.1` 的 28 个已发布 DSH 版本，包括 `0.1.5-rc.2`。具体版本、验证范围和 npm 发布状态见[兼容性说明](docs/dsh-compatibility.md)。
+- 当前源码覆盖从 `0.0.1-rc.5` 到 `0.2.1-rc.4` 的 32 个已发布 DSH 版本，包括 `0.1.5-rc.2`。具体版本、验证范围和 npm 发布状态见[兼容性说明](docs/dsh-compatibility.md)。
 - 默认允许新版 DSH（包括 alpha、rc）安装，已测试版本列表不作为安装白名单；实际遇到兼容问题请提交 [issue](https://github.com/anysearch-team/anysearch-dsh/issues)。
 - 网页提取通过 Harness 原生 `web_fetch` 暴露；插件不会再增加一个重复的 `anysearch_extract` 工具。
-- 请通过 DSH 管理的凭据文件或环境变量配置 API Key；DSH 设置页当前不提供第三方 Provider 凭据输入项。
+- 请通过插件自己的插件行页面（插件 → `@anysearch/anysearch-dsh` → 配置），或 DSH 管理的凭据文件与环境变量配置 API Key。
+- 插件详情页还会显示原生 `web_search` / `web_fetch` 当前解析到的搜索源，并可一键双向切换：切到 AnySearch，或恢复原生 Search API 组合（即原生 Web 搜索开关自己写入的那对 id）。若所选值与 bundle 默认相同，则写入“清除覆盖”而不是存一份副本。这两个字段是 volatile，切换后下一次调用即生效，无需重启。
 
 ## 文档
 
@@ -139,8 +144,8 @@ npx -y @deepseek-ai/dsh plugin --profile web remove @anysearch/anysearch-dsh
 <div align="center">
   <table>
     <tr>
-      <td align="center"><strong>微信群入群问卷</strong><br><img src="docs/assets/discord-community-qr.png" alt="微信群入群问卷二维码" width="180"></td>
-      <td align="center"><strong>Discord 邀请</strong><br><img src="docs/assets/wechat-community-qr.jpg" alt="Discord 邀请二维码" width="180"></td>
+      <td align="center"><strong>微信群入群问卷</strong><br><img src="docs/assets/wechat-community-qr.png" alt="微信群入群问卷二维码" width="180"></td>
+      <td align="center"><strong>Discord 邀请</strong><br><img src="docs/assets/discord-community-qr.jpg" alt="Discord 邀请二维码" width="180"></td>
     </tr>
   </table>
 </div>

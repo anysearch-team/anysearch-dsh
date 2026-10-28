@@ -123,6 +123,40 @@ describe('AnySearchClient search', () => {
       .toEqual(['Bearer as_sk_first', 'Bearer as_sk_rotated'])
   })
 
+  it('resolves the key and its reference in one read when the caller supplies both', async () => {
+    const fetchMock = vi.fn(async () => jsonResponse(searchEnvelope()))
+    vi.stubGlobal('fetch', fetchMock)
+    const resolveCredential = vi.fn()
+      .mockResolvedValueOnce({ key: 'as_sk_first', reference: 'LIVE_REF' })
+      .mockResolvedValueOnce({ key: 'as_sk_rotated', reference: 'LIVE_REF_ROTATED' })
+    const client = new AnySearchClient({ baseURL: options.baseURL, resolveCredential })
+
+    await client.search({ query: 'first' })
+    await client.search({ query: 'second' })
+
+    // One resolution per operation: the key cannot be read under one reference and
+    // then validated against another, which is what a live `apiKeyEnv` re-point
+    // would otherwise do to a request already in flight.
+    expect(resolveCredential).toHaveBeenCalledTimes(2)
+    const calls = fetchMock.mock.calls as unknown as Array<[string, RequestInit]>
+    expect(calls.map(([, init]) => (init.headers as Record<string, string>).authorization))
+      .toEqual(['Bearer as_sk_first', 'Bearer as_sk_rotated'])
+  })
+
+  it('rejects a key that is the literal reference it was read from', async () => {
+    const fetchMock = vi.fn(async () => jsonResponse(searchEnvelope()))
+    vi.stubGlobal('fetch', fetchMock)
+
+    // The guard compares against the reference that travelled WITH this key, so a
+    // row re-pointed to a new name does not leave the old name's literal value
+    // looking like a usable key.
+    await expect(new AnySearchClient({
+      baseURL: options.baseURL,
+      resolveCredential: () => Promise.resolve({ key: 'LIVE_REF', reference: 'LIVE_REF' }),
+    }).search({ query: 'q' })).rejects.toThrow('credential is a placeholder')
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
   it('bounds aggregate canonical page content across all results', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => jsonResponse({
       code: 0,

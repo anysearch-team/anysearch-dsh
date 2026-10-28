@@ -15,6 +15,14 @@ export type { AnySearchDomainCapability, AnySearchDomainsResponse, AnySearchDoma
 export declare const name = "web-search-anysearch";
 /** Capability seams required by the Providers and model-facing tools. */
 export declare const inject: string[];
+/**
+ * A configuration field the loader hands over as a live reference. A `volatile`
+ * field is read through `get()` so a settings write applies to the next read;
+ * a plain object (a unit test, a direct caller) carries the value itself.
+ */
+export interface LiveConfigField<T> {
+    get(): T;
+}
 /** AnySearch plugin configuration. */
 export interface Config {
     /** Credential reference resolved for each operation. Missing values use anonymous access. */
@@ -23,6 +31,16 @@ export interface Config {
     baseURL?: string;
     /** Aggregate cleaned-content characters rendered to the model by one advanced tool operation. */
     maxRenderedContentChars?: number;
+}
+/**
+ * The config `apply` receives. `apiKeyEnv` is volatile — it rides the entry's
+ * settings form, which is how the Plugins row page reads the accepted reference
+ * back — so the loader hands that one field over as a live reference
+ * ({@link LiveConfigField}) rather than the plain string a configuration file
+ * states.
+ */
+export interface RunningConfig extends Omit<Config, 'apiKeyEnv'> {
+    apiKeyEnv?: string | LiveConfigField<string>;
 }
 /** Fully validated configuration consumed by the plugin runtime. */
 export interface ResolvedConfig {
@@ -33,16 +51,15 @@ export interface ResolvedConfig {
     /** Aggregate cleaned-content characters rendered by one tool operation. */
     maxRenderedContentChars: number;
 }
-export declare const Config: z<Schemastery.ObjectS<{
-    apiKeyEnv: z<string, string>;
-    baseURL: z<string, string>;
-    maxRenderedContentChars: z<number, number>;
-}>, Schemastery.ObjectT<{
-    apiKeyEnv: z<string, string>;
-    baseURL: z<string, string>;
-    maxRenderedContentChars: z<number, number>;
-}>>;
+export declare const Config: z<Config, RunningConfig>;
+/**
+ * The credential reference in force right now: the row's `apiKeyEnv`, or the
+ * default when it names none. One read, used both by validation and by every
+ * operation, so the reference a key is read under and the reference it is
+ * validated against are the same value even when a settings write lands mid-flight.
+ */
+export declare function credentialReferenceOf(config: RunningConfig): string;
 /** Resolve defaults and reject self-contained configuration errors before registration. */
-export declare function resolveConfig(config: Config): ResolvedConfig;
+export declare function resolveConfig(config: RunningConfig): ResolvedConfig;
 /** Register the AnySearch Provider and advanced tools with their owning services. */
-export declare function apply(ctx: Context, config: Config): void;
+export declare function apply(ctx: Context, config: RunningConfig): void;

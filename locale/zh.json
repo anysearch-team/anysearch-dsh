@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "AnySearch 网页搜索",
+    "description": "将 AnySearch 作为插件接入 DSH，原生 web_search 与 web_fetch 即可拿到实时网页搜索与清洗后的正文；另加垂直搜索、批量搜索与能力查询工具。"
+  }
+}

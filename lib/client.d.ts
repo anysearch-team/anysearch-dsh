@@ -5,10 +5,26 @@ export { ANYSEARCH_DSH_CLIENT_ID } from './version.ts';
 export declare const ANYSEARCH_DEFAULT_BASE_URL = "https://api.anysearch.com";
 /** AnySearch operation names retained in safe diagnostics. */
 export type AnySearchOperation = 'search' | 'extract' | 'domains' | 'sub_domains';
+/** One read of the API key together with the reference it was read from. */
+export interface CredentialResolution {
+    /** The key; `undefined` uses anonymous access. */
+    key: string | undefined;
+    /** Credential reference the key was read from. */
+    reference: string;
+}
 /** Resolved AnySearch client configuration. */
 export interface AnySearchClientOptions {
+    /**
+     * Resolve the key and its reference in one step. Preferred over
+     * `resolveApiKey`/`apiKeyReference`: when the reference is live configuration
+     * that can be re-pointed while a request is in flight, reading the key under
+     * one reference and then validating it against a second read of another is a
+     * race the caller cannot see — the key is attributed to the wrong reference,
+     * and the placeholder guard may compare against a value that never applied.
+     */
+    resolveCredential?: () => Promise<CredentialResolution>;
     /** Resolve the API key for one operation; `undefined` uses anonymous access. */
-    resolveApiKey: () => Promise<string | undefined>;
+    resolveApiKey?: () => Promise<string | undefined>;
     /** Credential reference whose literal value must never be sent as an API key. */
     apiKeyReference?: string;
     /** API base URL; public paths are appended to its pathname. */
@@ -56,5 +72,11 @@ export declare class AnySearchClient {
     /** Read detailed capabilities for the supplied ordered domain names. */
     getSubDomains(domains: readonly string[], signal?: AbortSignal): Promise<AnySearchSubDomainsResponse>;
     private request;
+    /**
+     * The key resolution the configured callback pair describes: `resolveCredential`
+     * when the wiring supplies it, otherwise one call of `resolveApiKey` labelled
+     * with the static `apiKeyReference`.
+     */
+    private readCredential;
     private resolveApiKey;
 }

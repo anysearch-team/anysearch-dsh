@@ -27,10 +27,15 @@
     "0.1.7-rc.2",
     "0.2.0-rc.1",
     "0.2.0-rc.2",
-    "0.2.1-alpha.1"
+    "0.2.1-alpha.1",
+    "0.2.1-rc.1",
+    "0.2.1-rc.2",
+    "0.2.1-rc.3",
+    "0.2.1-rc.4"
   ],
   "unavailable": {
     "0.0.1-rc.1": "Published dependency graph requires @deepseek-ai/dsh-type-meta, which returns npm HTTP 404.",
-    "0.0.1-rc.2": "Published dependency graph requires @deepseek-ai/dsh-type-meta, which returns npm HTTP 404."
+    "0.0.1-rc.2": "Published dependency graph requires @deepseek-ai/dsh-type-meta, which returns npm HTTP 404.",
+    "0.2.2-alpha.2": "Requires Cordis 4.0.6-alpha.1 and Schemastery 3.18.6-alpha.1, outside the ranges this plugin declares, so a strict install refuses the peer set. Drop this entry once the ranges admit the release."
   }
 }

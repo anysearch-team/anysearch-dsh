@@ -33,10 +33,27 @@ const API_KEY_PLACEHOLDERS = new Set([
 /** AnySearch operation names retained in safe diagnostics. */
 export type AnySearchOperation = 'search' | 'extract' | 'domains' | 'sub_domains'
 
+/** One read of the API key together with the reference it was read from. */
+export interface CredentialResolution {
+  /** The key; `undefined` uses anonymous access. */
+  key: string | undefined
+  /** Credential reference the key was read from. */
+  reference: string
+}
+
 /** Resolved AnySearch client configuration. */
 export interface AnySearchClientOptions {
+  /**
+   * Resolve the key and its reference in one step. Preferred over
+   * `resolveApiKey`/`apiKeyReference`: when the reference is live configuration
+   * that can be re-pointed while a request is in flight, reading the key under
+   * one reference and then validating it against a second read of another is a
+   * race the caller cannot see — the key is attributed to the wrong reference,
+   * and the placeholder guard may compare against a value that never applied.
+   */
+  resolveCredential?: () => Promise<CredentialResolution>
   /** Resolve the API key for one operation; `undefined` uses anonymous access. */
-  resolveApiKey: () => Promise<string | undefined>
+  resolveApiKey?: () => Promise<string | undefined>
   /** Credential reference whose literal value must never be sent as an API key. */
   apiKeyReference?: string
   /** API base URL; public paths are appended to its pathname. */
@@ -267,11 +284,23 @@ export class AnySearchClient {
     }
   }
 
+  /**
+   * The key resolution the configured callback pair describes: `resolveCredential`
+   * when the wiring supplies it, otherwise one call of `resolveApiKey` labelled
+   * with the static `apiKeyReference`.
+   */
+  private readCredential(): Promise<CredentialResolution> {
+    const { resolveCredential, resolveApiKey, apiKeyReference } = this.options
+    if (resolveCredential !== undefined) return resolveCredential()
+    if (resolveApiKey === undefined) return Promise.resolve({ key: undefined, reference: apiKeyReference ?? '' })
+    return resolveApiKey().then(key => ({ key, reference: apiKeyReference ?? '' }))
+  }
+
   private async resolveApiKey(operation: AnySearchOperation, signal?: AbortSignal): Promise<string | undefined> {
     if (signal?.aborted === true) throw aborted(operation, signal)
-    let value: string | undefined
+    let resolution: CredentialResolution
     try {
-      value = await abortable(this.options.resolveApiKey(), signal)
+      resolution = await abortable(this.readCredential(), signal)
     } catch (error: unknown) {
       if (isSignalAborted(signal) || isAbortError(error)) throw aborted(operation, signal, error)
       throw new AnySearchClientError(
@@ -279,9 +308,9 @@ export class AnySearchClient {
         { operation, cause: error },
       )
     }
-    const trimmed = value?.trim()
+    const trimmed = resolution.key?.trim()
     if (trimmed === undefined || trimmed.length === 0) return undefined
-    if (trimmed === this.options.apiKeyReference || API_KEY_PLACEHOLDERS.has(trimmed)) {
+    if (trimmed === resolution.reference.trim() || API_KEY_PLACEHOLDERS.has(trimmed)) {
       throw new AnySearchClientError(
         `AnySearch ${operation} credential is a placeholder; remove it for anonymous access or configure a valid API key`,
         { operation },

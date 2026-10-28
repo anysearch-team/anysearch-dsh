@@ -31,6 +31,28 @@ for (const lifecycle of ['preinstall', 'install', 'postinstall', 'prepare', 'pre
 for (const entry of [packageInfo.main, packageInfo.types, packageInfo.dsh.bundle.patch.replace(/^\.\//, '')]) {
   assert.ok(packagedFiles.has(entry), `Package entry is missing: ${entry}`)
 }
+// The plugin card reads the icon and the localized meta straight out of the
+// installed package, so a missing or unpacked file degrades the card silently.
+const cardFiles = [packageInfo.icon, 'locale/zh.json', 'locale/en.json']
+for (const entry of cardFiles) {
+  assert.ok(entry, 'package.json must declare an icon and ship the locale tables')
+  assert.ok(packagedFiles.has(entry.replace(/^\.\//, '')), `Plugin card file is missing from the package: ${entry}`)
+}
+// Every export target is a subpath someone resolves by name — the browser loads
+// `./client`, the host reads `./cordis.patch.yml` — and a target renamed or left
+// out of the tarball only fails when that page is opened. Wildcards are patterns,
+// not files, so they are skipped.
+function exportTargets(value, collected = []) {
+  if (typeof value === 'string') collected.push(value)
+  else if (Array.isArray(value)) for (const entry of value) exportTargets(entry, collected)
+  else if (value !== null && typeof value === 'object') for (const entry of Object.values(value)) exportTargets(entry, collected)
+  return collected
+}
+for (const target of exportTargets(packageInfo.exports)) {
+  if (target.includes('*')) continue
+  const file = target.replace(/^\.\//, '')
+  assert.ok(packagedFiles.has(file), `Export target is missing from the package: ${target}`)
+}
 const readmes = ['README.md', 'README.zh-CN.md']
 const localImages = new Set()
 

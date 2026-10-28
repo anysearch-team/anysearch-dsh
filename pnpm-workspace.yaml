@@ -1,4 +1,6 @@
 minimumReleaseAgeExclude:
-  # Retained reviewed foundation versions still present in pnpm-lock.yaml.
-  - '@deepseek-ai/cosmokit@1.8.2'
-  - '@deepseek-ai/schemastery@3.18.1'
+  # Foundation versions this lockfile resolves, kept installable even when a
+  # configured minimumReleaseAge is younger than their publication date.
+  - '@deepseek-ai/cosmokit@1.8.6'
+  - '@deepseek-ai/cosmokit@1.8.6-alpha.1'
+  - '@deepseek-ai/schemastery@3.18.5'

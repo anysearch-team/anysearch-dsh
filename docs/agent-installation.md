@@ -66,7 +66,11 @@ The output must contain only the credential reference `ANYSEARCH_API_KEY`, never
 
 An API key is not required for initial use. Without one, the plugin uses AnySearch's anonymous quota.
 
-If the user needs account-level quota, direct them to sign up or sign in at <https://anysearch.com> and obtain a key from <https://www.anysearch.com/console/api-keys>. Ask the user to store it outside the conversation in `$DSH_HOME/.credentials.yaml`, whose default location is `~/.dsh/.credentials.yaml`:
+If the user needs account-level quota, direct them to sign up or sign in at <https://anysearch.com> and obtain a key from <https://www.anysearch.com/console/api-keys>.
+
+Prefer the plugin's own page: tell the user to open **Plugins → `@anysearch/anysearch-dsh` → `web-search-anysearch` → Configure** and paste the key there. The page writes it into DSH's managed credentials document under the reference the row names (`apiKeyEnv`, default `ANYSEARCH_API_KEY`), so the user does it themselves and the value never passes through the conversation.
+
+If that page is unavailable — an older DSH, or a host that serves no credential service — ask the user to store the key outside the conversation in `$DSH_HOME/.credentials.yaml`, whose default location is `~/.dsh/.credentials.yaml`:
 
 ```yaml
 ANYSEARCH_API_KEY: "as_sk_your_key"

@@ -24,6 +24,7 @@ import {
   ANYSEARCH_PROVIDER_ID,
   AnySearchClient,
   AnySearchProvider,
+  credentialReferenceOf,
   mapAnySearchResponse,
   mapAnySearchResult,
   resolveConfig,
@@ -333,9 +334,59 @@ describe('AnySearch plugin registration', () => {
     })
     expect(resolveConfig({ apiKeyEnv: ' CUSTOM_KEY ', baseURL: 'https://example.test/root/' }))
       .toMatchObject({ apiKeyEnv: 'CUSTOM_KEY', baseURL: 'https://example.test/root/' })
-    expect(() => resolveConfig({ apiKeyEnv: '   ' })).toThrow('apiKeyEnv must be a non-empty credential reference')
+    // A blank reference is treated as absent, not as an error: the Plugins row page
+    // shows the default reference for a blank `apiKeyEnv`, so throwing here would
+    // let the GUI manage one reference while every search failed on another.
+    expect(resolveConfig({ apiKeyEnv: '   ' }).apiKeyEnv).toBe('ANYSEARCH_API_KEY')
+    expect(resolveConfig({ apiKeyEnv: '' }).apiKeyEnv).toBe('ANYSEARCH_API_KEY')
     expect(() => resolveConfig({ baseURL: 'ftp://example.test' })).toThrow('baseURL must use HTTP or HTTPS')
     expect(() => resolveConfig({ baseURL: 'not a URL' })).toThrow('baseURL must be an absolute URL')
+  })
+
+  it('reads a live apiKeyEnv once per operation, so the key always matches its reference', async () => {
+    const fetchMock = vi.fn(async () => jsonResponse(successEnvelope()))
+    vi.stubGlobal('fetch', fetchMock)
+    const resolved: string[] = []
+    class CountingCredentials extends MemoryCredentials {
+      override resolve(ref: CredentialRef): Promise<ResolvedCredential | undefined> {
+        resolved.push(String(ref))
+        return super.resolve(ref)
+      }
+    }
+
+    const ctx = new Context()
+    await ctx.plugin(SystemPrompt)
+    await ctx.plugin(ToolRuntime)
+    await ctx.plugin(WebRuntime, {
+      searchProvider: ANYSEARCH_PROVIDER_ID,
+      fetchProvider: ANYSEARCH_FETCH_PROVIDER_ID,
+    })
+    await ctx.plugin(CountingCredentials)
+    const ref = credentialRef('LIVE_KEY')
+    await ctx.credentials.set(ref, 'as_sk_live')
+
+    // Mounted through the schema, `apiKeyEnv` arrives as the schema's own live
+    // reference — the same shape the loader hands `apply`.
+    const fiber = await ctx.plugin(anySearchPlugin, { apiKeyEnv: 'LIVE_KEY' })
+
+    resolved.length = 0
+    await ctx.web.search({ query: 'q' })
+    // One read per operation. The wiring resolved the reference and then read the
+    // credential once; a second read is what used to let a re-point slip between
+    // the key and the reference it is validated against.
+    expect(resolved).toEqual(['LIVE_KEY'])
+    const calls = fetchMock.mock.calls as unknown as Array<[string, RequestInit]>
+    expect(calls[0]?.[1].headers).toMatchObject({ authorization: 'Bearer as_sk_live' })
+    await fiber.dispose()
+  })
+
+  it('reads the live reference field once per call', () => {
+    let reads = 0
+    const field = { get: () => { reads += 1; return 'LIVE_KEY' } }
+    expect(credentialReferenceOf({ apiKeyEnv: field })).toBe('LIVE_KEY')
+    expect(reads).toBe(1)
+    // Blank names are still absent, not references.
+    expect(credentialReferenceOf({ apiKeyEnv: { get: () => '   ' } })).toBe('ANYSEARCH_API_KEY')
   })
 
   it('resolves a managed credential on every operation, rejects its literal reference, and unregisters', async () => {
