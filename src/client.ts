@@ -30,6 +30,14 @@ const API_KEY_PLACEHOLDERS = new Set([
   'as_sk_your_key',
 ])
 
+/**
+ * HTTP statuses that prove the credential in use cannot serve requests now:
+ * invalid or revoked credentials (`401`, `403`) and an exhausted quota (`402`).
+ * The client never retries, so these are the only statuses that make the
+ * configuration itself unusable rather than one request unlucky.
+ */
+const UNAVAILABLE_HTTP_STATUSES: ReadonlySet<number> = new Set([401, 402, 403])
+
 /** AnySearch operation names retained in safe diagnostics. */
 export type AnySearchOperation = 'search' | 'extract' | 'domains' | 'sub_domains'
 
@@ -92,11 +100,31 @@ interface EnvelopeData {
 
 /** HTTP client shared by the native Provider and AnySearch-specific tools. */
 export class AnySearchClient {
+  /** Credential identity (`''` for anonymous access) behind the recorded failure. */
+  private failedCredential: string | undefined
+  /** Why an observed request proved this configuration unusable, if it did. */
+  private unavailableReason: string | undefined
+  /** Credential identity (`''` for anonymous access) resolved for the request in flight. */
+  private credentialInUse = ''
+
   constructor(private readonly options: AnySearchClientOptions) {}
 
-  /** Whether the configured base URL can produce public HTTP endpoints. */
+  /**
+   * Whether this provider can currently serve requests.
+   *
+   * A well-formed base URL is necessary but not sufficient: a request that
+   * failed with `401`, `402` or `403` proves the credential in use cannot work
+   * right now, so the client reports unavailable until a request succeeds or
+   * the resolved credential changes.
+   */
   available(): boolean {
-    return endpoint(this.options.baseURL, '/v1/search') !== undefined
+    return this.unavailableReason === undefined
+      && endpoint(this.options.baseURL, '/v1/search') !== undefined
+  }
+
+  /** Why the last observed request failure made this client unavailable. */
+  unavailable(): string | undefined {
+    return this.unavailableReason
   }
 
   /** Execute one search and validate its complete response. */
@@ -150,12 +178,54 @@ export class AnySearchClient {
     init: { method: 'GET' | 'POST'; body?: string },
     signal?: AbortSignal,
   ): Promise<EnvelopeData> {
+    try {
+      const envelope = await this.send(path, operation, init, signal)
+      this.clearUnavailable()
+      return envelope
+    } catch (error: unknown) {
+      this.recordFailure(operation, error)
+      throw error
+    }
+  }
+
+  /** Drop a recorded failure; called once a request succeeds. */
+  private clearUnavailable(): void {
+    this.failedCredential = undefined
+    this.unavailableReason = undefined
+  }
+
+  /** Remember the credential being used, dropping a failure recorded for another one. */
+  private noteCredential(apiKey: string | undefined): void {
+    const credential = apiKey ?? ''
+    this.credentialInUse = credential
+    if (this.failedCredential !== undefined && this.failedCredential !== credential) {
+      this.clearUnavailable()
+    }
+  }
+
+  /** Mark the client unavailable when a request proves the credential cannot work. */
+  private recordFailure(operation: AnySearchOperation, error: unknown): void {
+    if (!(error instanceof AnySearchClientError)) return
+    const status = error.httpStatus
+    if (status === undefined || !UNAVAILABLE_HTTP_STATUSES.has(status)) return
+    const code = error.errorCode === undefined ? '' : ` (${error.errorCode})`
+    this.failedCredential = this.credentialInUse
+    this.unavailableReason = `AnySearch ${operation} failed with HTTP ${status}${code} as ${error.authentication ?? 'unknown'} access; the provider stays unavailable until a request succeeds or the credential changes`
+  }
+
+  private async send(
+    path: string,
+    operation: AnySearchOperation,
+    init: { method: 'GET' | 'POST'; body?: string },
+    signal?: AbortSignal,
+  ): Promise<EnvelopeData> {
     const url = endpoint(this.options.baseURL, path)
     if (url === undefined) {
       throw new AnySearchClientError('AnySearch base URL is invalid', { operation })
     }
 
     const apiKey = await this.resolveApiKey(operation, signal)
+    this.noteCredential(apiKey)
     const authentication = apiKey === undefined ? 'anonymous' : 'credential'
     const headers: Record<string, string> = {
       'accept': 'application/json',

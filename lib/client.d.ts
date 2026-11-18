@@ -44,9 +44,24 @@ export declare class AnySearchClientError extends Error {
 /** HTTP client shared by the native Provider and AnySearch-specific tools. */
 export declare class AnySearchClient {
     private readonly options;
+    /** Credential identity (`''` for anonymous access) behind the recorded failure. */
+    private failedCredential;
+    /** Why an observed request proved this configuration unusable, if it did. */
+    private unavailableReason;
+    /** Credential identity (`''` for anonymous access) resolved for the request in flight. */
+    private credentialInUse;
     constructor(options: AnySearchClientOptions);
-    /** Whether the configured base URL can produce public HTTP endpoints. */
+    /**
+     * Whether this provider can currently serve requests.
+     *
+     * A well-formed base URL is necessary but not sufficient: a request that
+     * failed with `401`, `402` or `403` proves the credential in use cannot work
+     * right now, so the client reports unavailable until a request succeeds or
+     * the resolved credential changes.
+     */
     available(): boolean;
+    /** Why the last observed request failure made this client unavailable. */
+    unavailable(): string | undefined;
     /** Execute one search and validate its complete response. */
     search(request: AnySearchSearchRequest, signal?: AbortSignal): Promise<AnySearchSearchResponse>;
     /** Extract and validate the cleaned content of one public HTTP(S) URL. */
@@ -56,5 +71,12 @@ export declare class AnySearchClient {
     /** Read detailed capabilities for the supplied ordered domain names. */
     getSubDomains(domains: readonly string[], signal?: AbortSignal): Promise<AnySearchSubDomainsResponse>;
     private request;
+    /** Drop a recorded failure; called once a request succeeds. */
+    private clearUnavailable;
+    /** Remember the credential being used, dropping a failure recorded for another one. */
+    private noteCredential;
+    /** Mark the client unavailable when a request proves the credential cannot work. */
+    private recordFailure;
+    private send;
     private resolveApiKey;
 }

@@ -295,6 +295,86 @@ describe('AnySearchClient capabilities', () => {
   })
 })
 
+describe('AnySearchClient availability', () => {
+  const quotaResponse = (): Response => jsonResponse({
+    code: -1,
+    message: 'daily_free_quota_exhausted',
+    request_id: 'req_quota',
+    error_code: 'daily_free_quota_exhausted',
+    data: null,
+  }, { status: 402 })
+
+  it('reports unavailable after a request proves the credential cannot work', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => quotaResponse()))
+    const client = new AnySearchClient({ ...options, resolveApiKey: () => Promise.resolve(undefined) })
+
+    expect(client.available()).toBe(true)
+    expect(client.unavailable()).toBeUndefined()
+
+    await expect(client.search({ query: 'probe' })).rejects.toMatchObject({ httpStatus: 402 })
+
+    expect(client.available()).toBe(false)
+    expect(client.unavailable()).toBe(
+      'AnySearch search failed with HTTP 402 (daily_free_quota_exhausted) as anonymous access; '
+      + 'the provider stays unavailable until a request succeeds or the credential changes',
+    )
+  })
+
+  it('restores availability after a later request succeeds', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(quotaResponse())
+      .mockResolvedValueOnce(jsonResponse(searchEnvelope()))
+    vi.stubGlobal('fetch', fetchMock)
+    const client = new AnySearchClient(options)
+
+    await expect(client.search({ query: 'first' })).rejects.toMatchObject({ httpStatus: 402 })
+    expect(client.available()).toBe(false)
+
+    await expect(client.search({ query: 'second' })).resolves.toMatchObject({ requestId: 'req_search' })
+    expect(client.available()).toBe(true)
+    expect(client.unavailable()).toBeUndefined()
+  })
+
+  it('drops the recorded failure once a different credential is resolved', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(jsonResponse({
+        code: 40101,
+        message: 'Invalid API key.',
+        request_id: 'req_auth',
+        data: null,
+      }, { status: 401 }))
+      .mockResolvedValueOnce(jsonResponse(searchEnvelope()))
+    vi.stubGlobal('fetch', fetchMock)
+    const resolveApiKey = vi.fn()
+      .mockResolvedValueOnce('as_sk_stale')
+      .mockResolvedValueOnce('as_sk_rotated')
+    const client = new AnySearchClient({ ...options, resolveApiKey })
+
+    await expect(client.search({ query: 'first' })).rejects.toMatchObject({ httpStatus: 401 })
+    expect(client.available()).toBe(false)
+
+    await expect(client.search({ query: 'second' })).resolves.toBeDefined()
+    expect(client.available()).toBe(true)
+  })
+
+  it.each([400, 429, 500, 502])('keeps availability after a retryable HTTP %i failure', async (status) => {
+    vi.stubGlobal('fetch', vi.fn(async () => jsonResponse({
+      code: -1,
+      message: 'upstream rejected this request',
+      data: null,
+    }, { status })))
+    const client = new AnySearchClient(options)
+
+    await expect(client.search({ query: 'probe' })).rejects.toMatchObject({ httpStatus: status })
+    expect(client.available()).toBe(true)
+    expect(client.unavailable()).toBeUndefined()
+  })
+
+  it('reports unavailable for an unusable base URL regardless of observed requests', () => {
+    expect(new AnySearchClient({ ...options, baseURL: 'file:///tmp/api' }).available()).toBe(false)
+  })
+})
+
 describe('AnySearchClient failures', () => {
   it.each([
     { placeholder: 'ANYSEARCH_API_KEY' },
